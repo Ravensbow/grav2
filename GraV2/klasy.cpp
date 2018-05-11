@@ -424,12 +424,12 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 			if (znacznikX == 317 + (i * 90) && GetAsyncKeyState(VK_RETURN))
 			{
 				SDL_Delay(200);
-				cout << "elo" << endl;
+				
 				
 				
 				if ((*itr)->rodzaj == 'z')
 				{
-					cout << "gownoZ" << endl;
+					
 
 					if (gracz.zalozone[0].nazwa != "")
 					{
@@ -477,7 +477,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 
 					itr = gracz.ekwipunek.erase(itr);
 					break;
-					cout << "gownoM" << endl;
+					
 				}
 				else if ((*itr)->rodzaj == 't')
 				{
@@ -500,7 +500,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 				
 					itr = gracz.ekwipunek.erase(itr);
 					break;
-					cout << "gownoT" << endl;
+					
 				}
 				///OKIENKO INFORMACJI O PRZEDMIOCIE:
 				if ((*itr)->uzycie(gracz) == true)
@@ -657,7 +657,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 			}
 		}
 	}
-	return gowno;//test githuba
+	return gowno;
 }
 
 void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
