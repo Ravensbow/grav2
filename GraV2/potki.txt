@@ -1,0 +1,11 @@
+Si³y +1si³y 's'
+
+Zrecznosci +1zrecznosci 'd'
+
+Intel +1intel 'i'
+
+Uzdrowienia 'u'
+
+Podpalenia 'p'
+
+Zamrozenia 'z'
