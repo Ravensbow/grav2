@@ -115,6 +115,7 @@ public:
 	double inteligencja;
 //3.Rodzaj:
 	char rodzaj;
+	bool zucane;
 //3. ...
 	SDL_Texture *tekstura;
 	SDL_Texture *tekstura_r;
@@ -132,7 +133,6 @@ class Potion : public Przedmiot {
 public:
 	Potion(){}
 	Potion(string, double, double, double, double, SDL_Texture*, bool, char);
-	void zucanie(vector<Przeciwnik> &przeciwniki,Gracz gracz);
 	bool uzycie(Gracz &gracz);
 	void update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s);
 };
@@ -151,11 +151,14 @@ public:
 	bool prz_eq;
 	double znacznikX=317;
 	double znacznikY = 59;
+	bool prz_zutu=false;
+	Przedmiot *zutka;
 
 	Okno_eq(double = 100, double = 100, double = 90, double = 90, bool=false);
 	~Okno_eq();
 	void update(SDL_Texture *tekstura, SDL_Texture *g_znacznik, SDL_Texture *g_okno_przedmiotu, TTF_Font*arial,SDL_Renderer *render,Gracz &gracz);
 	void sterowanie(Gracz gracz);
+	void zucanie(Gracz gracz, vector<Przeciwnik> &przeciwniki, SDL_Renderer *render);
 };
 
 class Mapa

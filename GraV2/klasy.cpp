@@ -58,6 +58,8 @@ int taimer_animacji(int &_t, int &_s, int liczba_klatek, int odswierzanie)
 
 
 
+
+
 //Przeciwnik:
 
 Przeciwnik::Przeciwnik(string imie,double px,double py, double wy, double sze,double sil,double zre,double inte,SDL_Texture *przec, vector<SDL_Rect> spr)
@@ -167,6 +169,7 @@ Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy, S
 	tekstura_r = teks_r;
 	aktywny = akt;
 	rodzaj = rodz;
+	zucane = false;
 	if (rodzaj == 'm')
 	{
 		zrecznosc = 2 + rand() % 10;
@@ -239,10 +242,7 @@ Potion::Potion(string imie, double px, double py, double sze, double wy, SDL_Tex
 	tekstura = teks;
 	aktywny = akt;
 	rodzaj = rodz;
-}
-void Potion::zucanie(vector<Przeciwnik> &przeciwniki, Gracz gracz)
-{
-
+	zucane = true;
 }
 bool Potion::uzycie(Gracz &gracz)
 {
@@ -510,8 +510,21 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 				}
 			}
 
+			///Uruchamianie trybu zucania:
+			if (GetAsyncKeyState(0x45) && (znacznikX == 317 + (i * 90)))
+			{
+				SDL_Delay(200);
+				if ((*itr)->zucane == true)
+				{
+					prz_zutu = true;
+					prz_eq = false;
+					zutka = *itr;
+				}
+			}
+
 			i++;
 			j++;
+
 		}
 		i = 0;
 		//Render Zalozonych:
@@ -551,9 +564,29 @@ void Okno_eq::sterowanie(Gracz gracz)
 	
 	if (GetAsyncKeyState(0x49) && gracz.tura == true)
 	{
+		SDL_Delay(100);
 		if (prz_eq == true) prz_eq = false;
 		else if (prz_eq == false) prz_eq = true;
 		SDL_Delay(200);
+	}
+	
+}
+
+void Okno_eq::zucanie(Gracz gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render)
+{
+	if (prz_zutu==true)
+	{
+		SDL_Rect rect;
+		rect.x = gracz.posX;
+		rect.y = gracz.posY;
+		rect.h = gracz.wysokosc;
+		rect.w = gracz.szerokosc;
+		SDL_RenderCopy(render, zutka->tekstura, NULL, &rect);
+		if (GetAsyncKeyState(0x45))
+		{
+			SDL_Delay(100);
+			prz_zutu = false;
+		}
 	}
 	
 }

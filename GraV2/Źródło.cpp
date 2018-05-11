@@ -408,6 +408,7 @@ int main(int argc, char * args[])
 					}
 				///0. UI:
 					ui.update(gracz, render,arial);
+					eq.zucanie(gracz, v_przeciwniki, render);
 				///5. Okno ekwipunku:
 					eq.update(g_okno_ekwipunku, g_znacznik, g_okno_przedmiotu, arial, render, gracz);
 				#pragma region Napisy
