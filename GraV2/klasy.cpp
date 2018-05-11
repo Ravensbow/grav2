@@ -657,7 +657,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 			}
 		}
 	}
-	return gowno;
+	return gowno;//test githuba
 }
 
 void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
