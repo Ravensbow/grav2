@@ -313,7 +313,6 @@ int main(int argc, char * args[])
 			{
 				fps.start();
 			//ZDARZENIA:
-			
 				///1.Przycisk X
 					while (SDL_PollEvent(&zdarzenie))
 					{
@@ -367,6 +366,7 @@ int main(int argc, char * args[])
 						gowno += 0.2;
 					}
 					gracz.poruszanie(eq, gowno,v_przeciwniki);
+					gracz.efekty_pasywne();
 				///1.1 Gracz atak:
 					gracz.atak_przycisk();
 				///2.UI
@@ -390,8 +390,14 @@ int main(int argc, char * args[])
 
 					for (int i = 0; i < v_przeciwniki.size(); i++)
 					{
-						v_przeciwniki[i].update(render, gracz, s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie);
+						v_przeciwniki[i].poruszanie(render, gracz, s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie);
 					}
+					for (int i = 0; i < v_przeciwniki.size(); i++)
+					{
+						v_przeciwniki[i].update(render,s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie,g_ciecie);
+						
+					}
+					cout << "===========" << endl;
 				///4. Przedmiot:
 					for (auto i = przedmiksy.begin(); i != przedmiksy.end(); i++)
 					{

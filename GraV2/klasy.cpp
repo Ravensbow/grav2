@@ -56,7 +56,21 @@ int taimer_animacji(int &_t, int &_s, int liczba_klatek, int odswierzanie)
 	return _s;
 }
 
+int taimer(Uint32 czas, int liczba_klatek, Uint32 odswierzanie)
+{
+	Uint32 uplyniety = SDL_GetTicks() - czas;
+	int a = liczba_klatek-1;
+	for (int i = 0; i < liczba_klatek; i++)
+	{
+		if (uplyniety > odswierzanie*i&&uplyniety < odswierzanie*(i + 1))
+		{
+			a = i;
+			break;
+		}
+	}
 
+	return a;
+}
 
 
 
@@ -84,16 +98,10 @@ Przeciwnik::~Przeciwnik()
 
 }
 
-void Przeciwnik::update(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie)
+void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie)
 {
-	if (zycie <= 0)aktywny = false;
+	
 	if (aktywny == true) {
-		posY += przesuniecieY;
-		posX += przesuniecieX;
-		posX *= s;
-		posY *= s;
-		szerokosc *= s;
-		wysokosc *= s;
 		if (tura == true && (int)posX > (int)gracz1.posX&&
 			(int)posX != (int)gracz1.posX + (int)gracz1.szerokosc &&
 			(int)posX != (int)gracz1.posX - (int)gracz1.szerokosc)
@@ -125,17 +133,6 @@ void Przeciwnik::update(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t, in
 			gracz1.tura = true;
 			tura = false;
 		}
-		SDL_Rect rect;
-		rect.x = posX;
-		rect.y = posY;
-		rect.w = wysokosc;
-		rect.h = szerokosc;
-		SDL_RenderCopy(render, tekstura, &spreje[taimer_animacji(_t, _s, 4, 12)], &rect);
-		rect.y -= 10;
-		rect.h = wysokosc / 10;
-
-		rect.w = szerokosc * ((double)zycie / (double)max_zycie);
-		SDL_RenderCopy(render, zdrowie, NULL, &rect);
 	}
 }
 
@@ -147,12 +144,55 @@ void Przeciwnik::atak(Gracz &gracz)
 		(int)posX<=(int)gracz.posX + (int)gracz.szerokosc && 
 		(int)posY>=(int)gracz.posY - (int)gracz.wysokosc&&
 		(int)posY <= (int)gracz.posY + (int)gracz.wysokosc&&
-		aktywny==true)
+		aktywny==true&&zycie>0)
 	{
-		cout << gracz.tura << endl;
+		
 		gracz.zycie -= zrecznosc*10;
 		gracz.tura = true;
 		tura = false;
+	}
+}
+
+void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie,SDL_Texture *ciecie)
+{
+	if (aktywny == true)
+	{
+		if (zycie <= 0)aktywny = false;
+
+		//skalowanie:
+		posY += przesuniecieY;
+		posX += przesuniecieX;
+		posX *= s;
+		posY *= s;
+		szerokosc *= s;
+		wysokosc *= s;
+
+
+		SDL_Rect rect;
+		rect.x = posX;
+		rect.y = posY;
+		rect.w = wysokosc;
+		rect.h = szerokosc;
+		SDL_RenderCopy(render, tekstura, &spreje[taimer_animacji(_t, _s, 4, 20)], &rect);
+		
+	//Animacja Ciecia:
+		if (b_ciecia==true)
+		{
+			SDL_RenderCopy(render, ciecie, &ustawianie_rect_spraj(60,40,6)[taimer(animacja_ciecia,6,80)], &rect);
+			if (Uint32 i=SDL_GetTicks() -animacja_ciecia > 80 * 6)
+			{
+
+				b_ciecia = false;
+			}
+		}
+		
+	//Pasek Zdrowia:	
+		rect.y -= 10;
+		rect.h = wysokosc / 10;
+		rect.w = szerokosc * ((double)zycie / (double)max_zycie);
+		SDL_RenderCopy(render, zdrowie, NULL, &rect);
+		
+
 	}
 }
 
@@ -257,7 +297,7 @@ bool Potion::uzycie(Gracz &gracz)
 }
 void Potion::update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s)
 {
-	cout << "kupa";
+	
 	posY += przesuniecieY;
 	posX += przesuniecieX;
 	posX *= s;
@@ -650,7 +690,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 	{
 		for (auto i = przeciwniki.begin(); i != przeciwniki.end(); i++)
 		{
-			if (posX-szerokosc==i->posX&&posY==i->posY)
+			if (posX-szerokosc==i->posX&&posY==i->posY&&i->aktywny==true)
 			{
 				gowno = false;
 				break;
@@ -661,7 +701,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 	{
 		for (auto i = przeciwniki.begin(); i != przeciwniki.end(); i++)
 		{
-			if (posX + szerokosc == i->posX&&posY == i->posY)
+			if (posX + szerokosc == i->posX&&posY == i->posY&&i->aktywny == true)
 			{
 				gowno = false;
 				break;
@@ -672,7 +712,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 	{
 		for (auto i = przeciwniki.begin(); i != przeciwniki.end(); i++)
 		{
-			if (posY - szerokosc == i->posY&&posX == i->posX)
+			if (posY - szerokosc == i->posY&&posX == i->posX&&i->aktywny == true)
 			{
 				gowno = false;
 				break;
@@ -683,7 +723,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 	{
 		for (auto i = przeciwniki.begin(); i != przeciwniki.end(); i++)
 		{
-			if (posY+ szerokosc == i->posY&&posX == i->posX)
+			if (posY+ szerokosc == i->posY&&posX == i->posX&&i->aktywny == true)
 			{
 				gowno = false;
 				break;
@@ -700,7 +740,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
 		{
 			
 				if (przesuwanie_gracz(przeciwniki,1)==true) {
-					cout << s << endl;
+					
 					posX -= szerokosc;
 					flip = SDL_FLIP_HORIZONTAL;
 					tura = false;
@@ -757,10 +797,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
 void Gracz::koniec(vector<Przeciwnik> &przeciwnik)
 {
 	tura = true;
-	for (auto itr = przeciwnik.begin(); itr != przeciwnik.end(); itr++)
-	{
-		itr->tura = false;
-	}
+	
 }
 
 void Gracz::podnoszenie(vector<Przedmiot*> &przedmiot)
@@ -801,9 +838,6 @@ void Gracz::atak_przycisk()
 
 void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render)
 {
-	
-	
-	
 	if (wlaczanie_ataku==true)
 	{
 		
@@ -812,7 +846,7 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 		rect.y = znaczY;
 		rect.w = szerokosc;
 		rect.h = wysokosc;
-		cout << rect.x << endl;
+	
 		
 		
 		if (GetAsyncKeyState(VK_LEFT) && rect.x - 100 >= posX - 100 )
@@ -843,6 +877,8 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 			{
 
 				przeciwnik[i].zycie -= zrecznosc;
+				przeciwnik[i].b_ciecia = true;
+				przeciwnik[i].animacja_ciecia = SDL_GetTicks();
 				wlaczanie_ataku = false;
 				tura = false;
 				
@@ -859,6 +895,7 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 
 	}
 }
+
 void Gracz::pauza(vector<Przeciwnik> &przeciwnik)
 {
 	if (GetAsyncKeyState(0x50)) {
@@ -873,6 +910,27 @@ void Gracz::pauza(vector<Przeciwnik> &przeciwnik)
 	}
 }
 
+void Gracz::efekty_pasywne()
+{
+	
+	if (podpalenie == true)
+	{
+		zycie--;
+		if (tura == true)
+		{
+			licznik_podpalenie--;
+		}	
+	}
+	if (licznik_podpalenie == 0)
+	{
+		licznik_podpalenie = 4;
+		podpalenie = false;
+	}
+	if (stun == true)
+	{
+
+	}
+}
 //UI:
 
 UI::UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Texture* g_zy)

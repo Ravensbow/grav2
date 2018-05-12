@@ -49,6 +49,10 @@ public:
 	SDL_Texture *chodzenie;
 	vector<Przedmiot*> ekwipunek;
 	vector<Przedmiot> zalozone;
+	//4. Efekty pasywne:
+	bool podpalenie = true; int licznik_podpalenie=4;
+	bool stun = false; int licznik_stuna=4;
+	
 
 ///   METODY:
 	Gracz( double, double, double, double,bool, SDL_Texture*, SDL_Texture*);
@@ -61,6 +65,7 @@ public:
 	void atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render);
 	void pauza(vector<Przeciwnik> &przeciwnik);
 	bool przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, int a);
+	void efekty_pasywne();
 };
 
 class Przeciwnik
@@ -79,18 +84,22 @@ public:
 	double wysokosc;
 	bool aktywny;
 	bool tura;
+	int animacja_obrazen=0;
 	//2.Statystyki:
 	double sila;
 	double zrecznosc;
 	double inteligencja;
 	int zycie;
 	int max_zycie;
+	//3.Taimery:
+	Uint32 animacja_ciecia = 0; 
+	bool b_ciecia = false;
 
 	Przeciwnik(string,double, double, double, double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
 	~Przeciwnik();
-	void update(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie);
+	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie);
 	void atak(Gracz &gracz);
-
+	void update(SDL_Renderer *render, int &_s, int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie, SDL_Texture *ciecie);
 };
 
 class Przedmiot
@@ -273,3 +282,4 @@ public:
 
 vector<SDL_Rect> ustawianie_rect_spraj(int wys, int szer, int kolumny);
 int taimer_animacji(int &_t, int &_s,int liczba_klatek, int odswierzanie);
+int taimer(Uint32 czas, int liczba_klatek, Uint32 odswierzanie);
