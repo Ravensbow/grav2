@@ -58,11 +58,11 @@ public:
 	Gracz( double, double, double, double,bool, SDL_Texture*, SDL_Texture*);
 	~Gracz();
 	void update(SDL_Renderer *render,int &_s,int &_t, int przesuniecieX, int przesuniecieY,double s, SDL_Texture *zdrowie);
-	void poruszanie(Okno_eq okno_eq, double s,vector<Przeciwnik> &przeciwniki);
+	void poruszanie(Okno_eq okno_eq, double s,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_ciecie);
 	void koniec(vector<Przeciwnik> &przeciwnik);
 	void podnoszenie(vector<Przedmiot*> &przedmiot);
 	void atak_przycisk();
-	void atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render);
+	void atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render, Mix_Chunk *m_chodzenie);
 	void pauza(vector<Przeciwnik> &przeciwnik);
 	bool przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, int a);
 	void efekty_pasywne();
@@ -98,7 +98,7 @@ public:
 	Przeciwnik(string,double, double, double, double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
 	~Przeciwnik();
 	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie);
-	void atak(Gracz &gracz);
+	void atak(Gracz &gracz, Mix_Chunk *m_obrazenia);
 	void update(SDL_Renderer *render, int &_s, int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie, SDL_Texture *ciecie);
 };
 

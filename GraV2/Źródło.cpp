@@ -209,6 +209,8 @@ int main(int argc, char * args[])
 
 	std::srand(time(NULL));
 
+
+
 	//Pêtla wykonawcza gry:
 	while (true)
 	{
@@ -240,10 +242,11 @@ int main(int argc, char * args[])
 			#pragma endregion
 
 		#pragma region Dzwieki
+			Mix_Chunk *m_ciecie = Mix_LoadWAV("Dzwieki/m_ciecie.wav");
+			Mix_Chunk *m_chodzenie = Mix_LoadWAV("Dzwieki/m_chodzenie.wav");
+			Mix_Chunk *m_obrazenia = Mix_LoadWAV("Dzwieki/m_obrazenia.wav");
 
-
-
-			#pragma endregion
+		#pragma endregion
 
 		#pragma region Zmienne
 			///wektory
@@ -365,7 +368,7 @@ int main(int argc, char * args[])
 						skala += 0.2;
 						gowno += 0.2;
 					}
-					gracz.poruszanie(eq, gowno,v_przeciwniki);
+					gracz.poruszanie(eq, gowno,v_przeciwniki,m_chodzenie);
 					gracz.efekty_pasywne();
 				///1.1 Gracz atak:
 					gracz.atak_przycisk();
@@ -397,7 +400,7 @@ int main(int argc, char * args[])
 						v_przeciwniki[i].update(render,s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie,g_ciecie);
 						
 					}
-					cout << "===========" << endl;
+		
 				///4. Przedmiot:
 					for (auto i = przedmiksy.begin(); i != przedmiksy.end(); i++)
 					{
@@ -406,11 +409,11 @@ int main(int argc, char * args[])
 
 
 				///.6 Ataki
-					gracz.atak(v_przeciwniki, g_znacznik2, g_ciecie,render);
+					gracz.atak(v_przeciwniki, g_znacznik2, g_ciecie,render,m_ciecie);
 					//gnom1.atak(gracz);
 					for (int i = 0; i < v_przeciwniki.size(); i++)
 					{
-						v_przeciwniki[i].atak(gracz);
+						v_przeciwniki[i].atak(gracz,m_obrazenia);
 					}
 				///0. UI:
 					ui.update(gracz, render,arial);
@@ -491,6 +494,9 @@ int main(int argc, char * args[])
 			SDL_DestroyTexture(g_kulazycia);
 			SDL_DestroyTexture(g_ciecie);
 			SDL_DestroyTexture(g_zdrowie);
+			Mix_FreeChunk(m_ciecie);
+			Mix_FreeChunk(m_chodzenie);
+			Mix_FreeChunk(m_obrazenia);
 			#pragma endregion
 
 		}

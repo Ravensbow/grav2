@@ -136,7 +136,7 @@ void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t
 	}
 }
 
-void Przeciwnik::atak(Gracz &gracz)
+void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 {
 	
 	if (tura == true &&
@@ -148,6 +148,7 @@ void Przeciwnik::atak(Gracz &gracz)
 	{
 		
 		gracz.zycie -= zrecznosc*10;
+		Mix_PlayChannel(-1, m_obrazenia, 0);
 		gracz.tura = true;
 		tura = false;
 	}
@@ -733,7 +734,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 	return gowno;
 }
 
-void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
+void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_chodzenie)
 {
 	
 		if (GetAsyncKeyState(VK_LEFT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false)
@@ -745,6 +746,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
 					flip = SDL_FLIP_HORIZONTAL;
 					tura = false;
 					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
+					Mix_PlayChannel(1, m_chodzenie, 0);
 					SDL_Delay(155);
 					
 
@@ -760,6 +762,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
 					flip = SDL_FLIP_NONE;
 					tura = false;
 					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
+					Mix_PlayChannel(1, m_chodzenie, 0);
 					SDL_Delay(155);
 					
 				}
@@ -773,6 +776,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
 					posY = posY - szerokosc;
 					tura = false;
 					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
+					Mix_PlayChannel(1, m_chodzenie, 0);
 					SDL_Delay(155);
 					
 				}
@@ -786,6 +790,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki)
 					posY = posY + szerokosc;
 					tura = false;
 					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
+					Mix_PlayChannel(1, m_chodzenie, 0);
 					SDL_Delay(155);
 					
 				}
@@ -836,7 +841,7 @@ void Gracz::atak_przycisk()
 	}
 }
 
-void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render)
+void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render,Mix_Chunk *m_ciecie)
 {
 	if (wlaczanie_ataku==true)
 	{
@@ -879,6 +884,7 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 				przeciwnik[i].zycie -= zrecznosc;
 				przeciwnik[i].b_ciecia = true;
 				przeciwnik[i].animacja_ciecia = SDL_GetTicks();
+				Mix_PlayChannel(-1, m_ciecie, 0);
 				wlaczanie_ataku = false;
 				tura = false;
 				
