@@ -50,8 +50,8 @@ public:
 	vector<Przedmiot*> ekwipunek;
 	vector<Przedmiot> zalozone;
 	//4. Efekty pasywne:
-	bool podpalenie = true; int licznik_podpalenie=4;
-	bool stun = false; int licznik_stuna=4;
+	bool podpalenie = true; Uint32 licznik_podpalenie=0;
+	bool stun = false;Uint32 licznik_stuna=0;
 	
 
 ///   METODY:
@@ -94,12 +94,16 @@ public:
 	//3.Taimery:
 	Uint32 animacja_ciecia = 0; 
 	bool b_ciecia = false;
+	//4.Pasywne:
+	bool podpalenie = false;
+	bool zamrozenie = false;
 
 	Przeciwnik(string,double, double, double, double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
 	~Przeciwnik();
 	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie);
 	void atak(Gracz &gracz, Mix_Chunk *m_obrazenia);
 	void update(SDL_Renderer *render, int &_s, int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie, SDL_Texture *ciecie);
+	void potion(char rodzaj);
 };
 
 class Przedmiot
@@ -160,6 +164,8 @@ public:
 	bool prz_eq;
 	double znacznikX=317;
 	double znacznikY = 59;
+	double polozenie_zutuX, polozenie_zutuY;
+	int prz_lotu;
 	bool prz_zutu=false;
 	Przedmiot *zutka;
 
@@ -167,7 +173,7 @@ public:
 	~Okno_eq();
 	void update(SDL_Texture *tekstura, SDL_Texture *g_znacznik, SDL_Texture *g_okno_przedmiotu, TTF_Font*arial,SDL_Renderer *render,Gracz &gracz);
 	void sterowanie(Gracz gracz);
-	void zucanie(Gracz gracz, vector<Przeciwnik> &przeciwniki, SDL_Renderer *render);
+	void zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki, SDL_Renderer *render,double s);
 };
 
 class Mapa

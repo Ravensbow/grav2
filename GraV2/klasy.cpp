@@ -197,6 +197,28 @@ void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t, int przesuniecie
 	}
 }
 
+void Przeciwnik::potion(char rodzaj)
+{
+	if ('u')
+	{
+		zycie += max_zycie * 0.25;
+		if (zycie> max_zycie)zycie = max_zycie;
+	}
+	if ('p')
+	{
+		podpalenie = true;
+	}
+	if ('z')
+	{
+		zamrozenie = true;
+	}
+	if ('s')
+	{
+		sila += 1;
+		max_zycie = sila * 10;
+	}
+}
+
 //Przedmiot:
 
 Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy, SDL_Texture *teks,SDL_Texture *teks_r,bool akt,char rodz)
@@ -270,6 +292,7 @@ Przedmiot::~Przedmiot()
 		SDL_RenderCopy(render, tekstura, NULL, &rect);
 	}
 }
+
 
 //Potion:
 
@@ -559,6 +582,8 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 				{
 					prz_zutu = true;
 					prz_eq = false;
+					polozenie_zutuX = gracz.posX;
+					polozenie_zutuY = gracz.posY;
 					zutka = *itr;
 				}
 			}
@@ -613,20 +638,59 @@ void Okno_eq::sterowanie(Gracz gracz)
 	
 }
 
-void Okno_eq::zucanie(Gracz gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render)
+void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render,double s)
 {
 	if (prz_zutu==true)
 	{
 		SDL_Rect rect;
-		rect.x = gracz.posX;
-		rect.y = gracz.posY;
+		rect.x = polozenie_zutuX;
+		rect.y = polozenie_zutuY;
 		rect.h = gracz.wysokosc;
 		rect.w = gracz.szerokosc;
 		SDL_RenderCopy(render, zutka->tekstura, NULL, &rect);
-		if (GetAsyncKeyState(0x45))
+		if (GetAsyncKeyState(0x45)&&prz_lotu==0)
 		{
 			SDL_Delay(100);
 			prz_zutu = false;
+		}
+		if (GetAsyncKeyState(VK_UP)&&gracz.posX==polozenie_zutuX&&gracz.posY==polozenie_zutuY)
+		{
+			prz_lotu = 1;
+		}
+		if (GetAsyncKeyState(VK_DOWN) && gracz.posX == polozenie_zutuX && gracz.posY == polozenie_zutuY)
+		{
+			prz_lotu = -1;
+		}
+		if (GetAsyncKeyState(VK_RIGHT) && gracz.posX == polozenie_zutuX && gracz.posY == polozenie_zutuY)
+		{
+			prz_lotu = 2;
+		}
+		if (GetAsyncKeyState(VK_LEFT) && gracz.posX == polozenie_zutuX && gracz.posY == polozenie_zutuY)
+		{
+			prz_lotu = -2;
+		}
+		if (prz_lotu == 1) polozenie_zutuY-=10/s;
+		if (prz_lotu == -1)polozenie_zutuY += 10 / s;
+		if (prz_lotu == 2)polozenie_zutuX += 10 / s;
+		if (prz_lotu == -2)polozenie_zutuX -= 10 / s;
+		for (int i = 0; i < przeciwniki.size(); i++)
+		{
+			if ( przeciwniki[i].posX == polozenie_zutuX && przeciwniki[i].posY == polozenie_zutuY && przeciwniki[i].aktywny == true)
+			{
+				prz_lotu=0;
+				prz_zutu = false;
+				
+				for (auto itr = gracz.ekwipunek.begin(); itr != gracz.ekwipunek.end(); itr++)
+				{
+					if (*itr == zutka)
+					{
+						itr = gracz.ekwipunek.erase(itr);
+						break;
+					}
+				} //usuwanie po trafieniu
+				przeciwniki[i].potion(zutka->rodzaj);
+				
+			}
 		}
 	}
 	
@@ -737,7 +801,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_chodzenie)
 {
 	
-		if (GetAsyncKeyState(VK_LEFT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false)
+		if (GetAsyncKeyState(VK_LEFT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false&&okno_eq.prz_zutu==false)
 		{
 			
 				if (przesuwanie_gracz(przeciwniki,1)==true) {
@@ -754,7 +818,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki,
 			
 		}
 		//2.right
-		if (GetAsyncKeyState(VK_RIGHT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false)
+		if (GetAsyncKeyState(VK_RIGHT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false && okno_eq.prz_zutu == false)
 		{
 			
 				if (przesuwanie_gracz(przeciwniki, 2) == true) {
@@ -769,7 +833,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki,
 			
 		}
 		//3.up
-		if (GetAsyncKeyState(VK_UP) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false)
+		if (GetAsyncKeyState(VK_UP) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false && okno_eq.prz_zutu == false)
 		{
 			
 				if (przesuwanie_gracz(przeciwniki, 3) == true) {
@@ -783,7 +847,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki,
 			
 		}
 		//4.down
-		if (GetAsyncKeyState(VK_DOWN) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false)
+		if (GetAsyncKeyState(VK_DOWN) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false && okno_eq.prz_zutu == false)
 		{
 			
 				if (przesuwanie_gracz(przeciwniki, 4) == true) {
@@ -921,17 +985,9 @@ void Gracz::efekty_pasywne()
 	
 	if (podpalenie == true)
 	{
-		zycie--;
-		if (tura == true)
-		{
-			licznik_podpalenie--;
-		}	
+		
 	}
-	if (licznik_podpalenie == 0)
-	{
-		licznik_podpalenie = 4;
-		podpalenie = false;
-	}
+	
 	if (stun == true)
 	{
 

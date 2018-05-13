@@ -245,6 +245,7 @@ int main(int argc, char * args[])
 			Mix_Chunk *m_ciecie = Mix_LoadWAV("Dzwieki/m_ciecie.wav");
 			Mix_Chunk *m_chodzenie = Mix_LoadWAV("Dzwieki/m_chodzenie.wav");
 			Mix_Chunk *m_obrazenia = Mix_LoadWAV("Dzwieki/m_obrazenia.wav");
+			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka1.wav");
 
 		#pragma endregion
 
@@ -316,6 +317,12 @@ int main(int argc, char * args[])
 			{
 				fps.start();
 			//ZDARZENIA:
+				///0. Muzyka:
+				if (Mix_PlayingMusic() == 0)
+				{
+					//Play the music
+					Mix_PlayMusic(m_muzyka1, -1);
+				}
 				///1.Przycisk X
 					while (SDL_PollEvent(&zdarzenie))
 					{
@@ -417,7 +424,7 @@ int main(int argc, char * args[])
 					}
 				///0. UI:
 					ui.update(gracz, render,arial);
-					eq.zucanie(gracz, v_przeciwniki, render);
+					eq.zucanie(gracz, v_przeciwniki, render,skala);
 				///5. Okno ekwipunku:
 					eq.update(g_okno_ekwipunku, g_znacznik, g_okno_przedmiotu, arial, render, gracz);
 				#pragma region Napisy
