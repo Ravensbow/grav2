@@ -199,20 +199,20 @@ void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t, int przesuniecie
 
 void Przeciwnik::potion(char rodzaj)
 {
-	if ('u')
+	if (rodzaj=='u')
 	{
 		zycie += max_zycie * 0.25;
 		if (zycie> max_zycie)zycie = max_zycie;
 	}
-	if ('p')
+	if (rodzaj == 'p')
 	{
 		podpalenie = true;
 	}
-	if ('z')
+	if (rodzaj == 'z')
 	{
 		zamrozenie = true;
 	}
-	if ('s')
+	if (rodzaj == 's')
 	{
 		sila += 1;
 		max_zycie = sila * 10;
@@ -296,7 +296,7 @@ Przedmiot::~Przedmiot()
 
 //Potion:
 
-Potion::Potion(string imie, double px, double py, double sze, double wy, SDL_Texture *teks, bool akt, char rodz)
+Potion::Potion(string imie, double px, double py, double sze, double wy, SDL_Texture *teks, bool akt, char rodz,int amo,double obra)
 {
 	nazwa = imie;
 	posX = px;
@@ -306,7 +306,9 @@ Potion::Potion(string imie, double px, double py, double sze, double wy, SDL_Tex
 	tekstura = teks;
 	aktywny = akt;
 	rodzaj = rodz;
+	amunicja = amo;
 	zucane = true;
+	obrazenia = obra;
 }
 bool Potion::uzycie(Gracz &gracz)
 {
@@ -677,23 +679,25 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 		{
 			if ( przeciwniki[i].posX == polozenie_zutuX && przeciwniki[i].posY == polozenie_zutuY && przeciwniki[i].aktywny == true)
 			{
-				prz_lotu=0;
+				prz_lotu = 0;
 				prz_zutu = false;
-				
+
 				for (auto itr = gracz.ekwipunek.begin(); itr != gracz.ekwipunek.end(); itr++)
 				{
 					if (*itr == zutka)
 					{
-						itr = gracz.ekwipunek.erase(itr);
+						(*itr)->amunicja--;
+						przeciwniki[i].zycie -= (*itr)->obrazenia;
+						przeciwniki[i].potion((*itr)->rodzaj);
+						if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
+						
 						break;
 					}
 				} //usuwanie po trafieniu
-				przeciwniki[i].potion(zutka->rodzaj);
 				
 			}
 		}
 	}
-	
 }
 
 //Gracz:

@@ -237,6 +237,7 @@ int main(int argc, char * args[])
 			SDL_Texture *g_UI = loadTexture("Grafiki/g_UI.png");
 			SDL_Texture *g_kulazycia = loadTexture("Grafiki/g_kulazycia.png");
 			SDL_Texture *g_potion_zdrowia = loadTexture("Grafiki/g_potion_zdrowia.png");
+			SDL_Texture *g_zutka = loadTexture("Grafiki/g_zutka.png");
 		//Czcionki:
 			TTF_Font*arial = TTF_OpenFont("arial.ttf", 30);
 			#pragma endregion
@@ -267,8 +268,9 @@ int main(int argc, char * args[])
 			Przedmiot miecz4("Miecz Kuby" , 800, 200, 100, 100, g_miecz,g_miecz_r,true,'m');
 			Przedmiot miecz5("Miecz Kuby", 1000, 200, 100, 100, g_miecz, g_miecz_r, true, 'm');
 			Przedmiot a;
-			Potion aaa("Potion Sily", 100, 100, 100, 100, g_potion_zdrowia, true, 's');
-			Potion zdrowko("Potion Zdrowia", 100, 200, 100, 100, g_potion_zdrowia, true, 'u');
+			Potion aaa("Potion Sily", 100, 100, 100, 100, g_potion_zdrowia, true, 's',0,0);
+			Potion zdrowko("Potion Zdrowia", 100, 200, 100, 100, g_potion_zdrowia, true, 'u',0,0);
+			Potion szczala("Rzutka", 200, 200, 100, 100, g_zutka, true, 'q', 5, 10);
 			Okno_eq eq(100, 10, 600, 600, false);
 			///push back test
 			//przedmioty
@@ -301,6 +303,9 @@ int main(int argc, char * args[])
 			przedmiksy.push_back(tp);
 			tp = new Potion;
 			*tp = zdrowko;
+			przedmiksy.push_back(tp);
+			tp = new Potion;
+			*tp = szczala;
 			przedmiksy.push_back(tp);
 			#pragma endregion
 
@@ -501,6 +506,7 @@ int main(int argc, char * args[])
 			SDL_DestroyTexture(g_kulazycia);
 			SDL_DestroyTexture(g_ciecie);
 			SDL_DestroyTexture(g_zdrowie);
+			SDL_DestroyTexture(g_zutka);
 			Mix_FreeChunk(m_ciecie);
 			Mix_FreeChunk(m_chodzenie);
 			Mix_FreeChunk(m_obrazenia);

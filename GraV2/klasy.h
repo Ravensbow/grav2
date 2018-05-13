@@ -126,7 +126,9 @@ public:
 	double sila;
 	double zrecznosc;
 	double inteligencja;
+	double obrazenia;
 //3.Rodzaj:
+	int amunicja;
 	char rodzaj;
 	bool zucane;
 //3. ...
@@ -144,11 +146,13 @@ public:
 class Potion : public Przedmiot {
 
 public:
+	
 	Potion(){}
-	Potion(string, double, double, double, double, SDL_Texture*, bool, char);
+	Potion(string, double, double, double, double, SDL_Texture*, bool, char,int,double);
 	bool uzycie(Gracz &gracz);
 	void update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s);
 };
+
 
 class Okno_eq
 {

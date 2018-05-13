@@ -8,4 +8,12 @@ Uzdrowienia 'u'
 
 Podpalenia 'p'
 
-Zamrozenia 'z'
+Zamrozenia 'z'!
+
+Zutka 'a'
+
+Tarcza 't'
+
+Zbroja 'z'
+
+Miecz 'm'
