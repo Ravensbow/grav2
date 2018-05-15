@@ -640,7 +640,7 @@ void Okno_eq::sterowanie(Gracz gracz)
 	
 }
 
-void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render,double s)
+void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render,double s, vector<Przedmiot*> &przedmiksy)
 {
 	if (prz_zutu==true)
 	{
@@ -671,10 +671,10 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 		{
 			prz_lotu = -2;
 		}
-		if (prz_lotu == 1) polozenie_zutuY-=10/s;
-		if (prz_lotu == -1)polozenie_zutuY += 10 / s;
-		if (prz_lotu == 2)polozenie_zutuX += 10 / s;
-		if (prz_lotu == -2)polozenie_zutuX -= 10 / s;
+		if (prz_lotu == 1) polozenie_zutuY-=10;
+		if (prz_lotu == -1)polozenie_zutuY += 10 ;
+		if (prz_lotu == 2)polozenie_zutuX += 10 ;
+		if (prz_lotu == -2)polozenie_zutuX -= 10;
 		for (int i = 0; i < przeciwniki.size(); i++)
 		{
 			if ( przeciwniki[i].posX == polozenie_zutuX && przeciwniki[i].posY == polozenie_zutuY && przeciwniki[i].aktywny == true)
@@ -697,8 +697,31 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 				
 			}
 		}
+		if ((polozenie_zutuX == gracz.posX+(500*s))||( polozenie_zutuX == gracz.posX-(500 * s)  ) || (polozenie_zutuY == gracz.posY - (500 * s)) || (polozenie_zutuY == gracz.posY + (500 * s)))
+		{
+			prz_lotu = 0;
+			prz_zutu = false;
+			for (auto itr = gracz.ekwipunek.begin(); itr != gracz.ekwipunek.end(); itr++)
+			{
+				if (*itr == zutka)
+				{
+					
+					(*itr)->amunicja--;
+					
+					Potion elo((*itr)->nazwa, polozenie_zutuX, polozenie_zutuY, (*itr)->szerokosc, (*itr)->wysokosc, (*itr)->tekstura, true, (*itr)->rodzaj, 1, (*itr)->obrazenia);
+					Przedmiot* tp;
+					tp = new Potion;
+					*tp = elo;
+					przedmiksy.push_back(tp);
+					
+					if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
+					break;
+				}
+			}
+		}
 	}
 }
+
 
 //Gracz:
 

@@ -177,6 +177,7 @@ double gowno = 1;
 SDL_Rect rect1, rect2, rect3;
 list<Mapa*> mapka;
 Klasa_fps fps;
+
 //Taimery:
 
 int t_szkielet = 0;
@@ -246,7 +247,7 @@ int main(int argc, char * args[])
 			Mix_Chunk *m_ciecie = Mix_LoadWAV("Dzwieki/m_ciecie.wav");
 			Mix_Chunk *m_chodzenie = Mix_LoadWAV("Dzwieki/m_chodzenie.wav");
 			Mix_Chunk *m_obrazenia = Mix_LoadWAV("Dzwieki/m_obrazenia.wav");
-			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka1.wav");
+			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka2.wav");
 
 		#pragma endregion
 
@@ -412,10 +413,11 @@ int main(int argc, char * args[])
 						v_przeciwniki[i].update(render,s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie,g_ciecie);
 						
 					}
-		
+					eq.zucanie(gracz, v_przeciwniki, render,skala,przedmiksy);
 				///4. Przedmiot:
 					for (auto i = przedmiksy.begin(); i != przedmiksy.end(); i++)
 					{
+						cout << przedmiksy.size() << endl;
 						(*i)->update(render, przesuniecieX, przesuniecieY, skala);
 					}
 
@@ -429,7 +431,7 @@ int main(int argc, char * args[])
 					}
 				///0. UI:
 					ui.update(gracz, render,arial);
-					eq.zucanie(gracz, v_przeciwniki, render,skala);
+					
 				///5. Okno ekwipunku:
 					eq.update(g_okno_ekwipunku, g_znacznik, g_okno_przedmiotu, arial, render, gracz);
 				#pragma region Napisy
@@ -484,8 +486,9 @@ int main(int argc, char * args[])
 				SDL_DestroyTexture(tt_zrecznosc);
 				SDL_DestroyTexture(tt_inteligencja);
 				
+			
 				
-				
+			
 			}
 
 			#pragma region Niszczenie Tekstur Muzyki i Napisow
