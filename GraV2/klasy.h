@@ -168,6 +168,7 @@ public:
 	bool prz_eq;
 	double znacznikX=317;
 	double znacznikY = 59;
+	double szer_znacz = 100;
 	double polozenie_zutuX, polozenie_zutuY;
 	int prz_lotu;
 	bool prz_zutu=false;

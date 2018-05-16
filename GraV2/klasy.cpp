@@ -405,32 +405,59 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 		//Chodzenie po UI:
 		rect.x = znacznikX;
 		rect.y = znacznikY;
-		rect.w = 100;
-		rect.h = 100;
-		if (GetAsyncKeyState(VK_RIGHT))
+		rect.w =szer_znacz;
+		rect.h = szer_znacz;
+			///W PRAWO:
+		if (znacznikX == 249 && GetAsyncKeyState(VK_RIGHT))
+		{
+			szer_znacz = 100;
+			znacznikX = 317;
+			znacznikY = 59;
+			SDL_Delay(200);
+		}
+		else if (znacznikX < 317 && GetAsyncKeyState(VK_RIGHT))
+		{
+			znacznikX += 60;
+			SDL_Delay(200);
+		}
+		else if (GetAsyncKeyState(VK_RIGHT) && znacznikX >=317&&znacznikX<587)
 		{
 			znacznikX =znacznikX + 90;
 			SDL_Delay(200);
 		}
-		if (GetAsyncKeyState(VK_LEFT))
+			///W LEWO:
+		if (znacznikX == 317 && GetAsyncKeyState(VK_LEFT))
+		{
+			szer_znacz = 60;
+			znacznikX = 249;
+			znacznikY = 272;
+			SDL_Delay(200);
+		}
+		else if (znacznikX < 317 && GetAsyncKeyState(VK_LEFT)&&znacznikX>129)
+		{
+			znacznikX -= 60;
+			SDL_Delay(200);
+		}
+		else if (GetAsyncKeyState(VK_LEFT)&& znacznikX >317)
 		{
 			znacznikX = znacznikX - 90;
 			SDL_Delay(200);
 		}
-		if (GetAsyncKeyState(VK_DOWN))
+		
+		if (GetAsyncKeyState(VK_DOWN)&&znacznikX>=317)
 		{
 			znacznikY = znacznikY + 90;
 			SDL_Delay(200);
 		}
-		if (GetAsyncKeyState(VK_UP))
+		if (GetAsyncKeyState(VK_UP) && znacznikX >= 317 && znacznikY > 59)
 		{
 			znacznikY = znacznikY - 90;
 			SDL_Delay(200);
 		}
 		SDL_RenderCopy(render, g_znacznik, NULL, &rect);
-		
+		cout << znacznikX << endl;
 		//Ekwipowanie:
-		int p = 0;
+		int p = 0; int p1 = 0;
 		int j = 0;
 		for (auto itr = gracz.ekwipunek.begin(); itr != gracz.ekwipunek.end(); itr++)
 		{
@@ -487,106 +514,114 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 			
 			
 			
-			if (znacznikX == 317 + (i * 90) && GetAsyncKeyState(VK_RETURN))
+			if (znacznikX == 317 + (j * 90) && GetAsyncKeyState(VK_RETURN))
 			{
-				SDL_Delay(200);
 				
 				
 				
-				if ((*itr)->rodzaj == 'z')
-				{
-					
-
-					if (gracz.zalozone[0].nazwa != "")
+				if (znacznikY == 59 + (p * 90)) {
+					SDL_Delay(200);
+					if ((*itr)->rodzaj == 'z')
 					{
-						Przedmiot* tp;
-						tp = new Przedmiot;
-						*tp = gracz.zalozone[0];
-						gracz.ekwipunek.push_back(tp);
-						gracz.sila -= gracz.zalozone[0].sila;
-						gracz.zrecznosc -= gracz.zalozone[0].zrecznosc;
-						gracz.inteligencja-= gracz.zalozone[0].inteligencja;
+
+
+						if (gracz.zalozone[0].nazwa != "")
+						{
+							Przedmiot* tp;
+							tp = new Przedmiot;
+							*tp = gracz.zalozone[0];
+							gracz.ekwipunek.push_back(tp);
+							gracz.sila -= gracz.zalozone[0].sila;
+							gracz.zrecznosc -= gracz.zalozone[0].zrecznosc;
+							gracz.inteligencja -= gracz.zalozone[0].inteligencja;
+						}
+
+
+
+						gracz.zalozone[0] = *gracz.ekwipunek[i];
+						gracz.sila += (*itr)->sila;
+						gracz.zrecznosc += (*itr)->zrecznosc;
+						gracz.inteligencja += (*itr)->inteligencja;
+						gracz.max_zycie = 10 * gracz.sila;
+
+
+						itr = gracz.ekwipunek.erase(itr);
+						break;
 					}
+					else if ((*itr)->rodzaj == 'm')
+					{
 
-					
 
-					gracz.zalozone[0] = *gracz.ekwipunek[i];
-					gracz.sila += (*itr)->sila;
-					gracz.zrecznosc += (*itr)->zrecznosc;
-					gracz.inteligencja += (*itr)->inteligencja;
-					gracz.max_zycie = 10 * gracz.sila;
-					
+						if (gracz.zalozone[1].nazwa != "") {
+							Przedmiot* tp;
+							tp = new Przedmiot;
+							*tp = gracz.zalozone[1];
+							gracz.ekwipunek.push_back(tp);
+							gracz.sila -= gracz.zalozone[1].sila;
+							gracz.zrecznosc -= gracz.zalozone[1].zrecznosc;
+							gracz.inteligencja -= gracz.zalozone[1].inteligencja;
+						}
+						gracz.zalozone[1] = *gracz.ekwipunek[i];
+						gracz.sila += (*itr)->sila;
+						gracz.zrecznosc += (*itr)->zrecznosc;
+						gracz.inteligencja += (*itr)->inteligencja;
+						gracz.max_zycie = 10 * gracz.sila;
 
-					itr = gracz.ekwipunek.erase(itr);
-					break;
-				}
-				else if ((*itr)->rodzaj == 'm')
-				{
 
-					
-					if (gracz.zalozone[1].nazwa != "") {
-						Przedmiot* tp;
-						tp = new Przedmiot;
-						*tp = gracz.zalozone[1];
-						gracz.ekwipunek.push_back(tp);
-						gracz.sila -= gracz.zalozone[1].sila;
-						gracz.zrecznosc -= gracz.zalozone[1].zrecznosc;
-						gracz.inteligencja -= gracz.zalozone[1].inteligencja;
+
+						itr = gracz.ekwipunek.erase(itr);
+						break;
+
 					}
-					gracz.zalozone[1] = *gracz.ekwipunek[i];
-					gracz.sila += (*itr)->sila;
-					gracz.zrecznosc += (*itr)->zrecznosc;
-					gracz.inteligencja += (*itr)->inteligencja;
-					gracz.max_zycie = 10 * gracz.sila;
+					else if ((*itr)->rodzaj == 't')
+					{
 
-					
 
-					itr = gracz.ekwipunek.erase(itr);
-					break;
-					
-				}
-				else if ((*itr)->rodzaj == 't')
-				{
-					
+						if (gracz.zalozone[2].nazwa != "") {
+							Przedmiot* tp;
+							tp = new Przedmiot;
+							*tp = gracz.zalozone[2];
+							gracz.ekwipunek.push_back(tp);
+							gracz.sila -= gracz.zalozone[2].sila;
+							gracz.zrecznosc -= gracz.zalozone[2].zrecznosc;
+							gracz.inteligencja -= gracz.zalozone[2].inteligencja;
+						}
+						gracz.zalozone[2] = *gracz.ekwipunek[i];
+						gracz.sila += (*itr)->sila;
+						gracz.zrecznosc += (*itr)->zrecznosc;
+						gracz.inteligencja += (*itr)->inteligencja;
+						gracz.max_zycie = 10 * gracz.sila;
 
-					if (gracz.zalozone[2].nazwa != "") {
-						Przedmiot* tp;
-						tp = new Przedmiot;
-						*tp = gracz.zalozone[2];
-						gracz.ekwipunek.push_back(tp);
-						gracz.sila -= gracz.zalozone[2].sila;
-						gracz.zrecznosc -= gracz.zalozone[2].zrecznosc;
-						gracz.inteligencja -= gracz.zalozone[2].inteligencja;
+						itr = gracz.ekwipunek.erase(itr);
+						break;
+
 					}
-					gracz.zalozone[2] = *gracz.ekwipunek[i];
-					gracz.sila += (*itr)->sila;
-					gracz.zrecznosc += (*itr)->zrecznosc;
-					gracz.inteligencja += (*itr)->inteligencja;
-					gracz.max_zycie = 10 * gracz.sila;
-				
-					itr = gracz.ekwipunek.erase(itr);
-					break;
-					
-				}
-				///OKIENKO INFORMACJI O PRZEDMIOCIE:
-				if ((*itr)->uzycie(gracz) == true)
-				{
-					itr = gracz.ekwipunek.erase(itr);
-					break;
+					///OKIENKO INFORMACJI O PRZEDMIOCIE:
+					if ((*itr)->uzycie(gracz) == true)
+					{
+						itr = gracz.ekwipunek.erase(itr);
+						break;
+					}
 				}
 			}
 
 			///Uruchamianie trybu zucania:
-			if (GetAsyncKeyState(0x45) && (znacznikX == 317 + (i * 90)))
+			if (GetAsyncKeyState(0x45) && (znacznikX == 317 + (j * 90)))
 			{
-				SDL_Delay(200);
-				if ((*itr)->zucane == true)
+				
+				
+				if (znacznikY == 59 + (p * 90)) 
 				{
-					prz_zutu = true;
-					prz_eq = false;
-					polozenie_zutuX = gracz.posX;
-					polozenie_zutuY = gracz.posY;
-					zutka = *itr;
+					SDL_Delay(200);
+					if ((*itr)->zucane == true)
+					{
+
+						prz_zutu = true;
+						prz_eq = false;
+						polozenie_zutuX = gracz.posX;
+						polozenie_zutuY = gracz.posY;
+						zutka = *itr;
+					}
 				}
 			}
 

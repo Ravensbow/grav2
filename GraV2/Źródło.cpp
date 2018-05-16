@@ -247,7 +247,7 @@ int main(int argc, char * args[])
 			Mix_Chunk *m_ciecie = Mix_LoadWAV("Dzwieki/m_ciecie.wav");
 			Mix_Chunk *m_chodzenie = Mix_LoadWAV("Dzwieki/m_chodzenie.wav");
 			Mix_Chunk *m_obrazenia = Mix_LoadWAV("Dzwieki/m_obrazenia.wav");
-			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka2.wav");
+			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka1.wav");
 
 		#pragma endregion
 
