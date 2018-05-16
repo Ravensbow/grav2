@@ -511,8 +511,109 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 				}
 			}
 			
-			
-			
+			//Wyswietlanie zalozonych:
+			if (znacznikX == 249)
+			{
+				rect.w = 400;
+				rect.h = 200;
+				rect.x = 800;
+				rect.y = 500;
+				SDL_RenderCopy(render, g_okno_przedmiotu, NULL, &rect);
+				rect.w = 100;
+				rect.h = 100;
+				rect.x = 835;
+				rect.y = 565;
+				SDL_RenderCopy(render,gracz.zalozone[0].tekstura, NULL, &rect);
+				rect_napisy.h = 20;
+				rect_napisy.w = 150;
+				rect_napisy.x = 920;
+				rect_napisy.y = 520;
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, gracz.zalozone[0].nazwa), NULL, &rect_napisy);
+
+				rect_napisy.h = 20;
+				rect_napisy.w = 150;
+				rect_napisy.x = 950;
+				rect_napisy.y = 560;
+				
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render,"Sila: "+ to_string(gracz.zalozone[0].sila)), NULL, &rect_napisy);
+
+				rect_napisy.y = 585;
+				rect_napisy.w = 200;
+
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Zrecznosc: " + to_string(gracz.zalozone[0].zrecznosc)), NULL, &rect_napisy);
+
+				rect_napisy.y = 610;
+
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Inteligencja" + to_string(gracz.zalozone[0].inteligencja)), NULL, &rect_napisy);
+			}
+			if (znacznikX == 189)
+			{
+				rect.w = 400;
+				rect.h = 200;
+				rect.x = 800;
+				rect.y = 500;
+				SDL_RenderCopy(render, g_okno_przedmiotu, NULL, &rect);
+				rect.w = 100;
+				rect.h = 100;
+				rect.x = 835;
+				rect.y = 565;
+				SDL_RenderCopy(render, gracz.zalozone[2].tekstura, NULL, &rect);
+				rect_napisy.h = 20;
+				rect_napisy.w = 150;
+				rect_napisy.x = 920;
+				rect_napisy.y = 520;
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, gracz.zalozone[2].nazwa), NULL, &rect_napisy);
+
+				rect_napisy.h = 20;
+				rect_napisy.w = 150;
+				rect_napisy.x = 950;
+				rect_napisy.y = 560;
+
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Sila: " + to_string(gracz.zalozone[2].sila)), NULL, &rect_napisy);
+
+				rect_napisy.y = 585;
+				rect_napisy.w = 200;
+
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Zrecznosc: " + to_string(gracz.zalozone[2].zrecznosc)), NULL, &rect_napisy);
+
+				rect_napisy.y = 610;
+
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Inteligencja" + to_string(gracz.zalozone[2].inteligencja)), NULL, &rect_napisy);
+			}
+			if (znacznikX == 129)
+			{
+				rect.w = 400;
+				rect.h = 200;
+				rect.x = 800;
+				rect.y = 500;
+				SDL_RenderCopy(render, g_okno_przedmiotu, NULL, &rect);
+				rect.w = 100;
+				rect.h = 100;
+				rect.x = 835;
+				rect.y = 565;
+				SDL_RenderCopy(render, gracz.zalozone[1].tekstura, NULL, &rect);
+				rect_napisy.h = 20;
+				rect_napisy.w = 150;
+				rect_napisy.x = 920;
+				rect_napisy.y = 520;
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, gracz.zalozone[1].nazwa), NULL, &rect_napisy);
+
+				rect_napisy.h = 20;
+				rect_napisy.w = 150;
+				rect_napisy.x = 950;
+				rect_napisy.y = 560;
+
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Sila: " + to_string(gracz.zalozone[1].sila)), NULL, &rect_napisy);
+
+				rect_napisy.y = 585;
+				rect_napisy.w = 200;
+
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Zrecznosc: " + to_string(gracz.zalozone[1].zrecznosc)), NULL, &rect_napisy);
+
+				rect_napisy.y = 610;
+
+				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Inteligencja" + to_string(gracz.zalozone[1].inteligencja)), NULL, &rect_napisy);
+			}
 			
 			if (znacznikX == 317 + (j * 90) && GetAsyncKeyState(VK_RETURN))
 			{
