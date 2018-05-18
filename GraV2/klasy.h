@@ -37,21 +37,22 @@ public:
 	double sila;
 	double zrecznosc;
 	double inteligencja;
-	int zycie;
-	int max_zycie;
+	double zycie;
+	double max_zycie;
+	double obrazenia;
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 	//3. ...
 	bool tura;
 	bool chodzi=false;
 	bool wlaczanie_ataku = false;
-	double aktualne_zycie;
 	SDL_Texture *tekstura;
 	SDL_Texture *chodzenie;
 	vector<Przedmiot*> ekwipunek;
 	vector<Przedmiot> zalozone;
 	//4. Efekty pasywne:
-	bool podpalenie = true; Uint32 licznik_podpalenie=0;
-	bool stun = false;Uint32 licznik_stuna=0;
+	bool tura_wczasie_nalzoenia;
+	bool podpalenie = false; int licznik_podpalenia=0;
+	bool stun = false; int licznik_stuna=0;
 	
 
 ///   METODY:
@@ -89,6 +90,7 @@ public:
 	double sila;
 	double zrecznosc;
 	double inteligencja;
+	double obrazenia;
 	int zycie;
 	int max_zycie;
 	//3.Taimery:
@@ -98,7 +100,7 @@ public:
 	bool podpalenie = false;
 	bool zamrozenie = false;
 
-	Przeciwnik(string,double, double, double, double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
+	Przeciwnik(string,double, double, double, double,double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
 	~Przeciwnik();
 	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie);
 	void atak(Gracz &gracz, Mix_Chunk *m_obrazenia);
@@ -127,6 +129,7 @@ public:
 	double zrecznosc;
 	double inteligencja;
 	double obrazenia;
+	double ochrona;
 //3.Rodzaj:
 	int amunicja;
 	char rodzaj;
@@ -136,11 +139,12 @@ public:
 	SDL_Texture *tekstura_r;
 	bool aktywny=true;
 ///METODY:
-	Przedmiot(string , double, double, double, double, SDL_Texture*,SDL_Texture*,bool,char);
+	Przedmiot(string , double, double, double, double,double, double,SDL_Texture*,SDL_Texture*,bool,char);
 	Przedmiot();
 	~Przedmiot();
 	virtual bool uzycie(Gracz &gracz) { return false; }
 	virtual void update( SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s);
+	virtual void okno_informacji(SDL_Renderer* render, SDL_Texture *tekstura, TTF_Font *font, double px, double py);
 };
 
 class Potion : public Przedmiot {
@@ -208,8 +212,9 @@ public:
 	double szerokosc;
 	SDL_Texture* g_interfejs;
 	SDL_Texture* g_zycie;
+	SDL_Texture* g_znacznik_podpalenia;
 
-	UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Texture* g_zy);
+	UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Texture* g_zy, SDL_Texture* g_z_p);
 
 	void update(Gracz gracz, SDL_Renderer* render, TTF_Font*arial);
 

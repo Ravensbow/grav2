@@ -227,10 +227,10 @@ int main(int argc, char * args[])
 			SDL_Texture *g_miecz_r = loadTexture("Grafiki/g_miecz_r.png");
 			SDL_Texture *g_tarcza = loadTexture("Grafiki/g_tarcza.png");
 			SDL_Texture *g_zbroja = loadTexture("Grafiki/g_zbroja.png");
-			SDL_Texture *g_okno_ekwipunku = loadTexture("Grafiki/g_okno_ekwipunku.png");
+			SDL_Texture *g_okno_ekwipunku = loadTexture("Grafiki/g_okno_ekwipunku2.png");
 			SDL_Texture *g_znacznik = loadTexture("Grafiki/g_znacznik.png");
 			SDL_Texture *g_znacznik2 = loadTexture("Grafiki/g_znacznik2.png");
-			SDL_Texture *g_okno_przedmiotu = loadTexture("Grafiki/g_okno_przedmiotu.png");
+			SDL_Texture *g_okno_przedmiotu = loadTexture("Grafiki/g_okno_przedmiotu2.png");
 			SDL_Texture *g_szkielet = loadTexture("Grafiki/g_szkielet.png");
 			SDL_Texture *g_gracz_chodzenie = loadTexture("Grafiki/g_postac_chodzenie.png");
 			SDL_Texture *g_ciecie = loadTexture("Grafiki/g_ciecie.png");
@@ -239,6 +239,7 @@ int main(int argc, char * args[])
 			SDL_Texture *g_kulazycia = loadTexture("Grafiki/g_kulazycia.png");
 			SDL_Texture *g_potion_zdrowia = loadTexture("Grafiki/g_potion_zdrowia.png");
 			SDL_Texture *g_zutka = loadTexture("Grafiki/g_zutka.png");
+			SDL_Texture *g_znacznik_podpalenia = loadTexture("Grafiki/g_znacznik_podpalenia.png");
 		//Czcionki:
 			TTF_Font*arial = TTF_OpenFont("arial.ttf", 30);
 			#pragma endregion
@@ -258,16 +259,16 @@ int main(int argc, char * args[])
 			vector<Przeciwnik> v_przeciwniki;
 			///obiekty
 
-			UI ui(0, 0, 720, 1280, g_UI, g_kulazycia);
+			UI ui(0, 0, 720, 1280, g_UI, g_kulazycia, g_znacznik_podpalenia);
 
 			Gracz gracz(100, 300, 100, 100, true, g_gracz,g_gracz_chodzenie);
-			Przeciwnik gnom1("Gnom", 400, 500, 100,100,3,2,0,g_szkielet,ustawianie_rect_spraj(32,20,4));
-			Przeciwnik gnom2("Gnom inny", 500, 700, 100, 100, 3, 2, 0, g_szkielet, ustawianie_rect_spraj(32, 20, 4));
-			Przedmiot miecz1( gen_nazw('m') , 200, 200, 100, 100,g_miecz,g_miecz_r,true,'m');
-			Przedmiot miecz2("Zbroja Tebigonga", 400, 200, 100, 100, g_zbroja,g_zbroja_r,true,'z');
-			Przedmiot miecz3("Tarcza Ateny", 600, 200, 100, 100, g_tarcza,g_tarcza,true,'t');
-			Przedmiot miecz4("Miecz Kuby" , 800, 200, 100, 100, g_miecz,g_miecz_r,true,'m');
-			Przedmiot miecz5("Miecz Kuby", 1000, 200, 100, 100, g_miecz, g_miecz_r, true, 'm');
+			Przeciwnik gnom1("Gnom", 400, 500, 100,100,10,10,0,2,g_szkielet,ustawianie_rect_spraj(32,20,4));
+			Przeciwnik gnom2("Gnom inny", 500, 700, 100, 100, 10, 10, 0,2, g_szkielet, ustawianie_rect_spraj(32, 20, 4));
+			Przedmiot miecz1( gen_nazw('m') , 200, 200, 100, 100,2,0,g_miecz,g_miecz_r,true,'m');
+			Przedmiot miecz2("Zbroja Tebigonga", 400, 200, 100, 100,0,2, g_zbroja,g_zbroja_r,true,'z');
+			Przedmiot miecz3("Tarcza Ateny", 600, 200, 100, 100,0,1, g_tarcza,g_tarcza,true,'t');
+			Przedmiot miecz4("Miecz Kuby" , 800, 200, 100, 100,3,0, g_miecz,g_miecz_r,true,'m');
+			Przedmiot miecz5("Miecz Kuby", 1000, 200, 100, 100,5,0, g_miecz, g_miecz_r, true, 'm');
 			Przedmiot a;
 			Potion aaa("Potion Sily", 100, 100, 100, 100, g_potion_zdrowia, true, 's',0,0);
 			Potion zdrowko("Potion Zdrowia", 100, 200, 100, 100, g_potion_zdrowia, true, 'u',0,0);
@@ -366,7 +367,9 @@ int main(int argc, char * args[])
 					if ( mysz_y > 30 && mysz_y < 690) przesuniecieY = 0;
 				///3.Podnoszeni przedmiotow przez gracza:
 					gracz.podnoszenie(przedmiksy);
+				
 					gracz.pauza(v_przeciwniki);
+					gracz.efekty_pasywne();
 			//STEROWANIE:
 				///1.Gracz
 					
@@ -381,12 +384,15 @@ int main(int argc, char * args[])
 						skala += 0.2;
 						gowno += 0.2;
 					}
+				
 					gracz.poruszanie(eq, gowno,v_przeciwniki,m_chodzenie);
 					gracz.efekty_pasywne();
 				///1.1 Gracz atak:
 					gracz.atak_przycisk();
+					
 				///2.UI
 					eq.sterowanie(gracz);
+					
 			//RENDERE:
 				SDL_RenderClear(render);
 				
@@ -417,13 +423,15 @@ int main(int argc, char * args[])
 				///4. Przedmiot:
 					for (auto i = przedmiksy.begin(); i != przedmiksy.end(); i++)
 					{
-						cout << przedmiksy.size() << endl;
+						
 						(*i)->update(render, przesuniecieX, przesuniecieY, skala);
 					}
 
 
 				///.6 Ataki
+					
 					gracz.atak(v_przeciwniki, g_znacznik2, g_ciecie,render,m_ciecie);
+					gracz.efekty_pasywne();
 					//gnom1.atak(gracz);
 					for (int i = 0; i < v_przeciwniki.size(); i++)
 					{
@@ -437,8 +445,8 @@ int main(int argc, char * args[])
 				#pragma region Napisy
 
 				//1.Sila tekstura:
-				string tekstk2 = "Sila:";
-				tekstk2 += to_string(gracz.sila);
+				string tekstk2 = "Obrazenia:";
+				tekstk2 += to_string((int)gracz.obrazenia);
 				char const* pchar = tekstk2.c_str();
 				SDL_Color kolor = { 255,255,255 };
 				SDL_Surface* tekst = TTF_RenderText_Blended(arial, pchar, kolor);
@@ -471,12 +479,14 @@ int main(int argc, char * args[])
 
 
 				#pragma endregion
+			
 
 				//Odswiertzanie i czyszczenie:
 				klatka++;
 				SDL_RenderPresent(render);
 				fps.koniec();
 				gracz.koniec(v_przeciwniki);
+				
 
 	
 				SDL_FreeSurface(tekst2);
@@ -510,6 +520,7 @@ int main(int argc, char * args[])
 			SDL_DestroyTexture(g_ciecie);
 			SDL_DestroyTexture(g_zdrowie);
 			SDL_DestroyTexture(g_zutka);
+			SDL_DestroyTexture(g_znacznik_podpalenia);
 			Mix_FreeChunk(m_ciecie);
 			Mix_FreeChunk(m_chodzenie);
 			Mix_FreeChunk(m_obrazenia);

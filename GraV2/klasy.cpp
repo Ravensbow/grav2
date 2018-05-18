@@ -76,7 +76,7 @@ int taimer(Uint32 czas, int liczba_klatek, Uint32 odswierzanie)
 
 //Przeciwnik:
 
-Przeciwnik::Przeciwnik(string imie,double px,double py, double wy, double sze,double sil,double zre,double inte,SDL_Texture *przec, vector<SDL_Rect> spr)
+Przeciwnik::Przeciwnik(string imie,double px,double py, double wy, double sze,double max,double zre,double inte,double obra,SDL_Texture *przec, vector<SDL_Rect> spr)
 {
 	aktywny = true;
 	nazwa = imie;
@@ -85,12 +85,13 @@ Przeciwnik::Przeciwnik(string imie,double px,double py, double wy, double sze,do
 	szerokosc = sze;
 	wysokosc = wy;
 	tekstura = przec;
-	sila = sil;
+	
 	zrecznosc = zre;
 	inteligencja=inte;
 	spreje = spr;
-	zycie = sila * 10;
-	max_zycie = sila * 10;
+	obrazenia = obra;
+	zycie = max ;
+	max_zycie = max;
 }
 
 Przeciwnik::~Przeciwnik()
@@ -138,7 +139,7 @@ void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t
 
 void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 {
-	
+	srand(time(NULL));
 	if (tura == true &&
 		(int)posX >= (int)gracz.posX - (int)gracz.szerokosc&&
 		(int)posX<=(int)gracz.posX + (int)gracz.szerokosc && 
@@ -147,7 +148,14 @@ void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 		aktywny==true&&zycie>0)
 	{
 		
-		gracz.zycie -= zrecznosc*10;
+		gracz.zycie -= obrazenia;
+		if (rand() % 4 == 0)
+		{
+			gracz.podpalenie = true;
+			gracz.licznik_podpalenia = 8;
+			gracz.tura_wczasie_nalzoenia = gracz.tura;
+		}
+
 		Mix_PlayChannel(-1, m_obrazenia, 0);
 		gracz.tura = true;
 		tura = false;
@@ -201,7 +209,7 @@ void Przeciwnik::potion(char rodzaj)
 {
 	if (rodzaj=='u')
 	{
-		zycie += max_zycie * 0.25;
+		zycie += (int)(max_zycie * 0.25);
 		if (zycie> max_zycie)zycie = max_zycie;
 	}
 	if (rodzaj == 'p')
@@ -214,14 +222,14 @@ void Przeciwnik::potion(char rodzaj)
 	}
 	if (rodzaj == 's')
 	{
-		sila += 1;
-		max_zycie = sila * 10;
+		obrazenia += 1;
+		
 	}
 }
 
 //Przedmiot:
 
-Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy, SDL_Texture *teks,SDL_Texture *teks_r,bool akt,char rodz)
+Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy,double obraz,double ochr, SDL_Texture *teks,SDL_Texture *teks_r,bool akt,char rodz)
 {
 	nazwa = imie;
 	posX = px;
@@ -232,6 +240,8 @@ Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy, S
 	tekstura_r = teks_r;
 	aktywny = akt;
 	rodzaj = rodz;
+	obrazenia = obraz;
+	ochrona = ochr;
 	zucane = false;
 	if (rodzaj == 'm')
 	{
@@ -265,6 +275,7 @@ Przedmiot::Przedmiot()
 	aktywny = NULL;
 	rodzaj = NULL;
 	sila = 0;
+	obrazenia = 0;
 	zrecznosc = 0;
 	inteligencja = 0;
 }
@@ -293,6 +304,84 @@ Przedmiot::~Przedmiot()
 	}
 }
 
+ void Przedmiot::okno_informacji(SDL_Renderer* render, SDL_Texture *tekst,TTF_Font *font, double px, double py)
+ {
+	 SDL_Rect rect;
+	 rect.x = px;
+	 rect.y = py;
+	 rect.w =400 ;
+	 rect.h =200 ;
+	 SDL_RenderCopy(render, tekst, NULL, &rect);
+	 rect.w = 100;
+	 rect.h = 100;
+	 rect.x = px+35;
+	 rect.y = py+65;
+	 SDL_RenderCopy(render, tekstura, NULL, &rect);
+	 rect.h = 20;
+	 rect.w = nazwa.size()*10;
+	 rect.x = px+205-(nazwa.size()*5);
+	 rect.y = py+20;
+	 SDL_Texture *na = napis(0, 0, 0, font, render, nazwa);
+	 SDL_RenderCopy(render, na, NULL, &rect);
+	 SDL_DestroyTexture(na);
+	 if (obrazenia > 0)
+	 {
+		 rect.h = 30;
+		 rect.w = 70;
+		 rect.x =px+ 220;
+		 rect.y = py+60;
+		 na = napis(255, 155, 0, font, render, "Obr: " + to_string((int)obrazenia));
+		 SDL_RenderCopy(render,na,NULL,&rect);
+		 SDL_DestroyTexture(na);
+	 }
+	 else if (ochrona > 0)
+	 {
+		 rect.h = 30;
+		 rect.w = 70;
+		 rect.x = px + 220;
+		 rect.y = py + 60;
+		 na = napis(255, 0, 255, font, render, "Ochr: " + to_string((int)ochrona));
+		 SDL_RenderCopy(render , na , NULL, &rect);
+		 SDL_DestroyTexture(na);
+	 }
+	 int i = 0;
+	 if (sila > 0)
+		 {
+			 rect.h = 20;
+			 rect.w = 60;
+			 rect.x = px + 215;
+			 rect.y = py +100+(20*i);
+			 na = napis(255, 0, 100, font, render, "+" + to_string((int)sila) + " sily");
+			 SDL_RenderCopy(render,na , NULL, &rect);
+			 i++;
+			 SDL_DestroyTexture(na);
+		 }
+	 if (zrecznosc > 0)
+		 {
+			 rect.h = 20;
+			 rect.w = 100;
+			 rect.x = px + 205;
+			 rect.y = py + 100 + (20 * i);
+			 na = napis(100, 0, 255, font, render, "+" + to_string((int)zrecznosc) + " zrecznosci");
+			 SDL_RenderCopy(render, na , NULL, &rect);
+			 i++;
+			 SDL_DestroyTexture(na);
+		 }
+	
+	 if (inteligencja > 0)
+	 {
+		 rect.h = 20;
+		 rect.w = 100;
+		 rect.x = px + 205;
+		 rect.y = py + 100 + (20 * i);
+		 na = napis(255, 100, 255, font, render, "+" + to_string((int)inteligencja) + " inteligencji");
+		 SDL_RenderCopy(render,na, NULL, &rect);
+		 i++;
+		 SDL_DestroyTexture(na);
+	 }
+	 SDL_DestroyTexture(na);
+	
+ }	
 
 //Potion:
 
@@ -316,7 +405,7 @@ bool Potion::uzycie(Gracz &gracz)
 	if (rodzaj == 'd')gracz.zrecznosc++;
 	if (rodzaj == 'i')gracz.inteligencja++;
 	if (rodzaj == 'u') {
-		gracz.zycie += 0.25*gracz.max_zycie;
+		gracz.zycie += (int)(0.25*gracz.max_zycie);
 		if (gracz.zycie > gracz.max_zycie)gracz.zycie = gracz.max_zycie;
 	}
 	return true;
@@ -398,7 +487,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 		
 		SDL_RenderCopy(render, gracz.zalozone[0].tekstura_r, &ustawianie_rect_spraj(60, 40, 2)[0], &rect);//Render zbroi na postaci
 
-		//SDL_RenderCopy(render, gracz.tekstura, NULL, &rect);//Render tarczy na postaci
+		//SDL_RenderCopy(render, gracz.zalozone[2].tekstura_r, NULL, &rect);//Render tarczy na postaci
 		
 		SDL_RenderCopy(render, gracz.zalozone[1].tekstura_r, &ustawianie_rect_spraj(60, 40, 2)[0], &rect);//Render miecza na postaci
 
@@ -455,7 +544,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 			SDL_Delay(200);
 		}
 		SDL_RenderCopy(render, g_znacznik, NULL, &rect);
-		cout << znacznikX << endl;
+	
 		//Ekwipowanie:
 		int p = 0; int p1 = 0;
 		int j = 0;
@@ -467,152 +556,25 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 			}
 			if (znacznikX == 317 + (j * 90))
 			{
-				
-				
 				if (znacznikY==59+(p*90)) {
 					
-					rect.w = 400;
-					rect.h = 200;
-					rect.x = 800;
-					rect.y = 500;
-					SDL_RenderCopy(render, g_okno_przedmiotu, NULL, &rect);
-					rect.w = 100;
-					rect.h = 100;
-					rect.x = 835;
-					rect.y = 565;
-					SDL_RenderCopy(render,(*itr)->tekstura, NULL, &rect);
-					rect_napisy.h = 20;
-					rect_napisy.w = 150;
-					rect_napisy.x = 920;
-					rect_napisy.y = 520;
-					SDL_RenderCopy(render, napis(255, 255, 255, arial, render, (*itr)->nazwa), NULL, &rect_napisy);
-					//Sila:
-					rect_napisy.h = 20;
-					rect_napisy.w = 150;
-					rect_napisy.x = 950;
-					rect_napisy.y = 560;
-					string tekstk2 = "Sila:";
-					tekstk2 += to_string((*itr)->sila);
-					char const* pchar = tekstk2.c_str();
-					SDL_RenderCopy(render, napis(255, 255, 255, arial, render, pchar), NULL, &rect_napisy);
-					//Zrecznosc:
-					rect_napisy.y = 585;
-					rect_napisy.w = 200;
-					tekstk2 = "Zrecznosc:";
-					tekstk2 += to_string((*itr)->zrecznosc);
-					pchar = tekstk2.c_str();
-					SDL_RenderCopy(render, napis(255, 255, 255, arial, render, pchar), NULL, &rect_napisy);
-					//Inteligencja:
-					rect_napisy.y = 610;
-					tekstk2 = "Inteligencja:";
-					tekstk2 += to_string((*itr)->inteligencja);
-					pchar = tekstk2.c_str();
-					SDL_RenderCopy(render, napis(255, 255, 255, arial, render, pchar), NULL, &rect_napisy);
+					(*itr)->okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
+					
 				}
 			}
 			
 			//Wyswietlanie zalozonych:
 			if (znacznikX == 249)
 			{
-				rect.w = 400;
-				rect.h = 200;
-				rect.x = 800;
-				rect.y = 500;
-				SDL_RenderCopy(render, g_okno_przedmiotu, NULL, &rect);
-				rect.w = 100;
-				rect.h = 100;
-				rect.x = 835;
-				rect.y = 565;
-				SDL_RenderCopy(render,gracz.zalozone[0].tekstura, NULL, &rect);
-				rect_napisy.h = 20;
-				rect_napisy.w = 150;
-				rect_napisy.x = 920;
-				rect_napisy.y = 520;
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, gracz.zalozone[0].nazwa), NULL, &rect_napisy);
-
-				rect_napisy.h = 20;
-				rect_napisy.w = 150;
-				rect_napisy.x = 950;
-				rect_napisy.y = 560;
-				
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render,"Sila: "+ to_string(gracz.zalozone[0].sila)), NULL, &rect_napisy);
-
-				rect_napisy.y = 585;
-				rect_napisy.w = 200;
-
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Zrecznosc: " + to_string(gracz.zalozone[0].zrecznosc)), NULL, &rect_napisy);
-
-				rect_napisy.y = 610;
-
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Inteligencja" + to_string(gracz.zalozone[0].inteligencja)), NULL, &rect_napisy);
+				gracz.zalozone[0].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
 			}
 			if (znacznikX == 189)
 			{
-				rect.w = 400;
-				rect.h = 200;
-				rect.x = 800;
-				rect.y = 500;
-				SDL_RenderCopy(render, g_okno_przedmiotu, NULL, &rect);
-				rect.w = 100;
-				rect.h = 100;
-				rect.x = 835;
-				rect.y = 565;
-				SDL_RenderCopy(render, gracz.zalozone[2].tekstura, NULL, &rect);
-				rect_napisy.h = 20;
-				rect_napisy.w = 150;
-				rect_napisy.x = 920;
-				rect_napisy.y = 520;
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, gracz.zalozone[2].nazwa), NULL, &rect_napisy);
-
-				rect_napisy.h = 20;
-				rect_napisy.w = 150;
-				rect_napisy.x = 950;
-				rect_napisy.y = 560;
-
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Sila: " + to_string(gracz.zalozone[2].sila)), NULL, &rect_napisy);
-
-				rect_napisy.y = 585;
-				rect_napisy.w = 200;
-
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Zrecznosc: " + to_string(gracz.zalozone[2].zrecznosc)), NULL, &rect_napisy);
-
-				rect_napisy.y = 610;
-
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Inteligencja" + to_string(gracz.zalozone[2].inteligencja)), NULL, &rect_napisy);
+				gracz.zalozone[2].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
 			}
 			if (znacznikX == 129)
 			{
-				rect.w = 400;
-				rect.h = 200;
-				rect.x = 800;
-				rect.y = 500;
-				SDL_RenderCopy(render, g_okno_przedmiotu, NULL, &rect);
-				rect.w = 100;
-				rect.h = 100;
-				rect.x = 835;
-				rect.y = 565;
-				SDL_RenderCopy(render, gracz.zalozone[1].tekstura, NULL, &rect);
-				rect_napisy.h = 20;
-				rect_napisy.w = 150;
-				rect_napisy.x = 920;
-				rect_napisy.y = 520;
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, gracz.zalozone[1].nazwa), NULL, &rect_napisy);
-
-				rect_napisy.h = 20;
-				rect_napisy.w = 150;
-				rect_napisy.x = 950;
-				rect_napisy.y = 560;
-
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Sila: " + to_string(gracz.zalozone[1].sila)), NULL, &rect_napisy);
-
-				rect_napisy.y = 585;
-				rect_napisy.w = 200;
-
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Zrecznosc: " + to_string(gracz.zalozone[1].zrecznosc)), NULL, &rect_napisy);
-
-				rect_napisy.y = 610;
-
-				SDL_RenderCopy(render, napis(255, 255, 255, arial, render, "Inteligencja" + to_string(gracz.zalozone[1].inteligencja)), NULL, &rect_napisy);
+				gracz.zalozone[1].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
 			}
 			
 			if (znacznikX == 317 + (j * 90) && GetAsyncKeyState(VK_RETURN))
@@ -635,6 +597,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 							gracz.sila -= gracz.zalozone[0].sila;
 							gracz.zrecznosc -= gracz.zalozone[0].zrecznosc;
 							gracz.inteligencja -= gracz.zalozone[0].inteligencja;
+							gracz.obrazenia -= gracz.zalozone[0].obrazenia;
 						}
 
 
@@ -643,7 +606,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 						gracz.sila += (*itr)->sila;
 						gracz.zrecznosc += (*itr)->zrecznosc;
 						gracz.inteligencja += (*itr)->inteligencja;
-						gracz.max_zycie = 10 * gracz.sila;
+						gracz.obrazenia += (*itr)->obrazenia;
 
 
 						itr = gracz.ekwipunek.erase(itr);
@@ -660,13 +623,14 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 							gracz.ekwipunek.push_back(tp);
 							gracz.sila -= gracz.zalozone[1].sila;
 							gracz.zrecznosc -= gracz.zalozone[1].zrecznosc;
+							gracz.obrazenia -= gracz.zalozone[1].obrazenia;
 							gracz.inteligencja -= gracz.zalozone[1].inteligencja;
 						}
 						gracz.zalozone[1] = *gracz.ekwipunek[i];
 						gracz.sila += (*itr)->sila;
 						gracz.zrecznosc += (*itr)->zrecznosc;
 						gracz.inteligencja += (*itr)->inteligencja;
-						gracz.max_zycie = 10 * gracz.sila;
+						gracz.obrazenia += (*itr)->obrazenia;
 
 
 
@@ -684,6 +648,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 							*tp = gracz.zalozone[2];
 							gracz.ekwipunek.push_back(tp);
 							gracz.sila -= gracz.zalozone[2].sila;
+							gracz.obrazenia -= gracz.zalozone[2].obrazenia;
 							gracz.zrecznosc -= gracz.zalozone[2].zrecznosc;
 							gracz.inteligencja -= gracz.zalozone[2].inteligencja;
 						}
@@ -691,7 +656,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 						gracz.sila += (*itr)->sila;
 						gracz.zrecznosc += (*itr)->zrecznosc;
 						gracz.inteligencja += (*itr)->inteligencja;
-						gracz.max_zycie = 10 * gracz.sila;
+						gracz.obrazenia += (*itr)->obrazenia;
 
 						itr = gracz.ekwipunek.erase(itr);
 						break;
@@ -874,8 +839,9 @@ Gracz::Gracz(double px, double py, double wy, double sze,bool tur, SDL_Texture *
 	inteligencja = 10;
 	zalozone.resize(3);
 	chodzenie = animacja_chodu;
-	zycie = (int)sila * 10;
-	max_zycie = (int)sila * 10;
+	zycie = 20;
+	max_zycie = 20;
+	obrazenia = 4;
 	
 }
 
@@ -893,7 +859,7 @@ void Gracz::update(SDL_Renderer *render,int &_s,int &_t,int przesuniecieX,int pr
 	posY *= s;
 	szerokosc *= s;
 	wysokosc *= s;
-	max_zycie = sila * 10;
+	
 	SDL_Rect rect;
 	rect.x = posX;
 	rect.y = posY;
@@ -1108,7 +1074,7 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 			if ((int)znaczX == (int)przeciwnik[i].posX && (int)znaczY == (int)przeciwnik[i].posY&&przeciwnik[i].aktywny == true && GetAsyncKeyState(VK_RETURN))
 			{
 
-				przeciwnik[i].zycie -= zrecznosc;
+				przeciwnik[i].zycie -= obrazenia;
 				przeciwnik[i].b_ciecia = true;
 				przeciwnik[i].animacja_ciecia = SDL_GetTicks();
 				Mix_PlayChannel(-1, m_ciecie, 0);
@@ -1148,7 +1114,14 @@ void Gracz::efekty_pasywne()
 	
 	if (podpalenie == true)
 	{
-		
+		if (tura_wczasie_nalzoenia != tura)
+		{
+			cout << "podpalilo cie: " << licznik_podpalenia << endl;
+			zycie -= 0.5;
+			licznik_podpalenia--;
+			tura_wczasie_nalzoenia = tura;
+		}
+		if (licznik_podpalenia <= 0)podpalenie = false;
 	}
 	
 	if (stun == true)
@@ -1158,7 +1131,7 @@ void Gracz::efekty_pasywne()
 }
 //UI:
 
-UI::UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Texture* g_zy)
+UI::UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Texture* g_zy, SDL_Texture* g_z_p)
 {
 	posX = px;
 	posY = py;
@@ -1166,6 +1139,7 @@ UI::UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Tex
 	szerokosc = szer;
 	g_interfejs = g_in;
 	g_zycie = g_zy;
+	g_znacznik_podpalenia = g_z_p;
 }
 
 void UI::update(Gracz gracz,SDL_Renderer* render, TTF_Font*arial)
@@ -1207,10 +1181,20 @@ void UI::update(Gracz gracz,SDL_Renderer* render, TTF_Font*arial)
 	rect.w = 80;
 	rect.h = 30;
 
-	SDL_Texture*na = napis(255, 255, 255, arial, render, to_string(gracz.zycie) + "/" + to_string(gracz.max_zycie));
+	SDL_Texture*na = napis(255, 255, 255, arial, render, to_string((int)gracz.zycie) + "/" + to_string((int)gracz.max_zycie));
 
 	SDL_RenderCopy(render,na, NULL, &rect);
-	
+
+	if (gracz.podpalenie == true)
+	{
+		rect.x = 200;
+		rect.y = 650;
+		rect.w = 32;
+		rect.h = 32;
+
+		SDL_RenderCopy(render, g_znacznik_podpalenia, NULL, &rect);
+	}
+
 	SDL_DestroyTexture(na);
 	
 	
