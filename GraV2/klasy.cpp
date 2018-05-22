@@ -101,7 +101,7 @@ Przeciwnik::~Przeciwnik()
 
 }
 
-void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t, double przesuniecieX, double przesuniecieY, double s, SDL_Texture *zdrowie)
+void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t,SDL_Texture *zdrowie)
 {
 	
 	if (aktywny == true) {
@@ -187,20 +187,11 @@ void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 	}
 }
 
-void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t, double przesuniecieX, double przesuniecieY, double s, SDL_Texture *zdrowie,SDL_Texture *ciecie,TTF_Font *arial)
+void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t,SDL_Texture *zdrowie,SDL_Texture *ciecie,TTF_Font *arial)
 {
 	if (aktywny == true)
 	{
 		if (zycie <= 0)aktywny = false;
-
-		//skalowanie:
-		posY += przesuniecieY;
-		posX += przesuniecieX;
-		posX *= s;
-		posY *= s;
-		szerokosc *= s;
-		wysokosc *= s;
-
 
 		SDL_Rect rect;
 		
@@ -209,8 +200,8 @@ void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t, double przesunie
 		rect.w = wysokosc;
 		rect.h = szerokosc;
 		
-		obr.w = 50;
-		obr.h = 50;
+		obr.w = szerokosc/2;
+		obr.h =wysokosc/2;
 
 		SDL_RenderCopy(render, tekstura, &spreje[taimer_animacji(_t, _s, 4, 20)], &rect);
 		
@@ -291,6 +282,16 @@ void Przeciwnik::potion(char rodzaj)
 		
 	}
 }
+void Przeciwnik::skalowanie(double przesuniecieX, double przesuniecieY, double skala)
+{
+	posX += przesuniecieX;
+	posY += przesuniecieY;
+	posX *= skala;
+	posY *= skala;
+
+	szerokosc *= skala;
+	wysokosc *= skala;
+}
 
 //Przedmiot:
 
@@ -351,14 +352,8 @@ Przedmiot::~Przedmiot()
 
 }
 
- void Przedmiot::update(SDL_Renderer *render, double przesuniecieX, double przesuniecieY, double s)
+ void Przedmiot::update(SDL_Renderer *render)
 {
-	posY += przesuniecieY;
-	posX += przesuniecieX;
-	posX *= s;
-	posY *= s;
-	szerokosc *= s;
-	wysokosc *= s;
 	if (aktywny == true)
 	{
 		SDL_Rect rect;
@@ -448,6 +443,16 @@ Przedmiot::~Przedmiot()
 	 SDL_DestroyTexture(na);
 	
  }	
+ void Przedmiot::skalowanie(double przesuniecieX, double przesuniecieY, double skala)
+ {
+	 posX += przesuniecieX;
+	 posY += przesuniecieY;
+	 posX *= skala;
+	 posY *= skala;
+
+	 szerokosc *= skala;
+	 wysokosc *= skala;
+ }
 
 //Potion:
 
@@ -476,15 +481,8 @@ bool Potion::uzycie(Gracz &gracz)
 	}
 	return true;
 }
-void Potion::update(SDL_Renderer *render, double przesuniecieX, double przesuniecieY, double s)
+void Potion::update(SDL_Renderer *render)
 {
-	
-	posY += przesuniecieY;
-	posX += przesuniecieX;
-	posX *= s;
-	posY *= s;
-	szerokosc *= s;
-	wysokosc *= s;
 	if (aktywny == true)
 	{
 		SDL_Rect rect;
@@ -815,7 +813,7 @@ void Okno_eq::sterowanie(Gracz gracz)
 	
 }
 
-void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render,double s, vector<Przedmiot*> &przedmiksy)
+void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render, vector<Przedmiot*> &przedmiksy)
 {
 	if (prz_zutu==true)
 	{
@@ -872,7 +870,7 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 				
 			}
 		}
-		if ((polozenie_zutuX == gracz.posX+(500*s))||( polozenie_zutuX == gracz.posX-(500 * s)  ) || (polozenie_zutuY == gracz.posY - (500 * s)) || (polozenie_zutuY == gracz.posY + (500 * s)))
+		if ((polozenie_zutuX == gracz.posX+(5*gracz.szerokosc))||( polozenie_zutuX == gracz.posX-(5 * gracz.szerokosc)  ) || (polozenie_zutuY == gracz.posY - (5 * gracz.szerokosc)) || (polozenie_zutuY == gracz.posY + (5 * gracz.szerokosc)))
 		{
 			prz_lotu = 0;
 			prz_zutu = false;
@@ -967,15 +965,8 @@ Gracz::~Gracz()
 
 }
 
-void Gracz::update(SDL_Renderer *render,int &_s,int &_t,double przesuniecieX,double przesuniecieY, double s,SDL_Texture *zdrowie,TTF_Font *arial,SDL_Texture *g_obrazenia)
+void Gracz::update(SDL_Renderer *render,int &_s,int &_t,SDL_Texture *zdrowie,TTF_Font *arial,SDL_Texture *g_obrazenia)
 {
-	
-	posY += przesuniecieY;
-	posX += przesuniecieX;
-	posX *= s;
-	posY *= s;
-	szerokosc *= s;
-	wysokosc *= s;
 	
 	SDL_Rect rect;
 	rect.x = posX;
@@ -1047,7 +1038,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 	return gowno;
 }
 
-void Gracz::poruszanie(Okno_eq okno_eq,double s,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_chodzenie)
+void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_chodzenie)
 {
 	
 		if (GetAsyncKeyState(VK_LEFT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false&&okno_eq.prz_zutu==false)
@@ -1280,7 +1271,8 @@ void Gracz::animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TT
 	if (b_ciecia == true)
 	{
 
-		SDL_RenderCopy(render, tekstura_ataku, NULL, &rect);
+		//SDL_RenderCopy(render, tekstura_ataku, NULL, &rect);
+		SDL_RenderCopyEx(render, tekstura_ataku, NULL, &rect, 0, NULL, flip);
 
 		obr.x += 2;
 		obr.y -= 2;
@@ -1306,6 +1298,17 @@ void Gracz::animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TT
 		}
 	}
 	SDL_DestroyTexture(na);
+}
+
+void Gracz::skalowanie(double przesuniecieX,double przesuniecieY,double skala)
+{
+	posX += przesuniecieX;
+	posY += przesuniecieY;
+	posX *= skala;
+	posY *= skala;
+
+	szerokosc *= skala;
+	wysokosc *= skala;
 }
 //UI:
 

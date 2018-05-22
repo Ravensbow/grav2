@@ -310,27 +310,41 @@ int main(int argc, char * args[])
 					}
 					if ( mysz_x > 1250 && mysz_x < 30) przesuniecieX = 0;
 					if ( mysz_y > 30 && mysz_y < 690) przesuniecieY = 0;
-				///3.Podnoszeni przedmiotow przez gracza:
-					gracz.podnoszenie(przedmiksy);
-				
-					gracz.pauza(v_przeciwniki);
-					gracz.efekty_pasywne();
+			
 			//STEROWANIE:
-				///1.Gracz
+				///1.Skalowanie
 					
 					skala = 1;
 					if (GetAsyncKeyState(0x5A)) // scroll dow
 					{
-						skala -= 0.02;
-						gowno -= 0.02;
+						if(skala>0.5)skala = 0.5;
+						SDL_Delay(200);
 					}
 					else if (GetAsyncKeyState(0x58)) // scroll up
 					{
-						skala += 0.02;
-						gowno += 0.02;
+						if(skala<2)skala = 2;
+						SDL_Delay(200);
 					}
-				
-					gracz.poruszanie(eq, skala,v_przeciwniki,m_chodzenie);
+
+					testowa_mapa.skalowanie(przesuniecieX, przesuniecieY, skala);
+					gracz.skalowanie(przesuniecieX, przesuniecieY, skala);
+					for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+						(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
+					}
+					for (auto itr = v_przeciwniki.begin(); itr != v_przeciwniki.end(); itr++) {
+						itr->skalowanie(przesuniecieX, przesuniecieY, skala);
+					}
+
+				///3.Podnoszeni przedmiotow przez gracza:
+					
+					gracz.podnoszenie(przedmiksy);
+
+					gracz.pauza(v_przeciwniki);
+					
+					gracz.efekty_pasywne();
+
+				///Gracz:
+					gracz.poruszanie(eq, v_przeciwniki,m_chodzenie);
 					gracz.efekty_pasywne();
 				///1.1 Gracz atak:6
 					gracz.atak_przycisk();
@@ -343,28 +357,28 @@ int main(int argc, char * args[])
 				
 				///1. Tlo:
 				
-					testowa_mapa.update(skala, przesuniecieX, przesuniecieY, render);
+					testowa_mapa.update(render);
 
 				///2. Gracz:
-					gracz.update(render,s_postac,t_postac,przesuniecieX,przesuniecieY, skala,g_zdrowie,arial,g_obrazenia);
+					gracz.update(render,s_postac,t_postac,g_zdrowie,arial,g_obrazenia);
 
 				///3. Przeciwniki:\
 
 					for (int i = 0; i < v_przeciwniki.size(); i++)
 					{
-						v_przeciwniki[i].poruszanie(render, gracz, s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie);
+						v_przeciwniki[i].poruszanie(render, gracz, s_szkielet, t_szkielet,g_zdrowie);
 					}
 					for (int i = 0; i < v_przeciwniki.size(); i++)
 					{
-						v_przeciwniki[i].update(render,s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie,g_ciecie,arial);
+						v_przeciwniki[i].update(render,s_szkielet, t_szkielet, g_zdrowie,g_ciecie,arial);
 						
 					}
-					eq.zucanie(gracz, v_przeciwniki, render,skala,przedmiksy);
+					eq.zucanie(gracz, v_przeciwniki, render,przedmiksy);
 				///4. Przedmiot:
 					for (auto i = przedmiksy.begin(); i != przedmiksy.end(); i++)
 					{
 						
-						(*i)->update(render, przesuniecieX, przesuniecieY, skala);
+						(*i)->update(render);
 					}
 
 

@@ -68,8 +68,8 @@ public:
 ///   METODY:
 	Gracz( double, double, double, double,bool, SDL_Texture*, SDL_Texture*);
 	~Gracz();
-	void update(SDL_Renderer *render,int &_s,int &_t, double przesuniecieX, double przesuniecieY, SDL_Texture *zdrowie, TTF_Font *arial, SDL_Texture *g_obrazenia);
-	void poruszanie(Okno_eq okno_eq, double s,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_ciecie);
+	void update(SDL_Renderer *render,int &_s,int &_t, SDL_Texture *zdrowie, TTF_Font *arial, SDL_Texture *g_obrazenia);
+	void poruszanie(Okno_eq okno_eq, vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_ciecie);
 	void koniec(vector<Przeciwnik> &przeciwnik);
 	void podnoszenie(vector<Przedmiot*> &przedmiot);
 	void atak_przycisk();
@@ -78,6 +78,7 @@ public:
 	bool przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, int a);
 	void efekty_pasywne();
 	void animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial);
+	void skalowanie(double przesuniecieX, double przesuniecieY,double skala);
 };
 
 class Przeciwnik
@@ -117,11 +118,12 @@ public:
 
 	Przeciwnik(string,double, double, double, double,double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
 	~Przeciwnik();
-	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, double przesuniecieX, double przesuniecieY, double s, SDL_Texture *zdrowie);
+	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, SDL_Texture *zdrowie);
 	void atak(Gracz &gracz, Mix_Chunk *m_obrazenia);
-	void update(SDL_Renderer *render, int &_s, int &_t, double przesuniecieX, double przesuniecieY, double s, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
+	void update(SDL_Renderer *render, int &_s, int &_t,SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
 	void potion(char rodzaj);
 	void animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial);
+	void skalowanie(double przesuniecieX, double przesuniecieY, double skala);
 };
 
 class Przedmiot
@@ -160,8 +162,9 @@ public:
 	Przedmiot();
 	~Przedmiot();
 	virtual bool uzycie(Gracz &gracz) { return false; }
-	virtual void update( SDL_Renderer *render, double przesuniecieX, double przesuniecieY, double s);
+	virtual void update( SDL_Renderer *render);
 	virtual void okno_informacji(SDL_Renderer* render, SDL_Texture *tekstura, TTF_Font *font, double px, double py);
+	void skalowanie(double przesuniecieX, double przesuniecieY, double skala);
 };
 
 class Potion : public Przedmiot {
@@ -171,7 +174,7 @@ public:
 	Potion(){}
 	Potion(string, double, double, double, double, SDL_Texture*, bool, char,int,double);
 	bool uzycie(Gracz &gracz);
-	void update(SDL_Renderer *render, double przesuniecieX, double przesuniecieY, double s);
+	void update(SDL_Renderer *render);
 };
 
 
@@ -200,7 +203,7 @@ public:
 	~Okno_eq();
 	void update(SDL_Texture *tekstura, SDL_Texture *g_znacznik, SDL_Texture *g_okno_przedmiotu, TTF_Font*arial,SDL_Renderer *render,Gracz &gracz);
 	void sterowanie(Gracz gracz);
-	void zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki, SDL_Renderer *render,double s, vector<Przedmiot*> &przedmiksy);
+	void zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki, SDL_Renderer *render, vector<Przedmiot*> &przedmiksy);
 	void statystyki(Gracz &gracz, SDL_Renderer *render,TTF_Font *arial);
 };
 
@@ -243,14 +246,9 @@ public:
 		wysokosc = 100.0;
 		szerokosc = 100.0;
 	}
-	void update(double skala, double przesuniecieX, double przesuniecieY, SDL_Renderer *render)
+	void update(SDL_Renderer *render)
 	{
-		posY += przesuniecieY;
-		posX += przesuniecieX;
-		posX *= skala;
-		posY *= skala;
-		szerokosc *= skala;
-		wysokosc *= skala;
+		
 
 		SDL_Rect rect;
 		rect.x = posX;
@@ -259,7 +257,16 @@ public:
 		rect.w = szerokosc;
 		SDL_RenderCopy(render, tekstura, NULL, &rect);
 	}
+	void skalowanie(double przesuniecieX, double przesuniecieY, double skala)
+	{
+		posX += przesuniecieX;
+		posY += przesuniecieY;
+		posX *= skala;
+		posY *= skala;
 
+		szerokosc *= skala;
+		wysokosc *= skala;
+	}
 };
 
 class Room
@@ -329,11 +336,18 @@ public:
 		}
 	}
 
-	void update(double skala, int przesuniecieX, int przesuniecieY,SDL_Renderer *render)
+	void update(SDL_Renderer *render)
 	{
 		for (auto itr = kafelki.begin(); itr != kafelki.end(); itr++)
 		{
-			(*itr)->update(skala, przesuniecieX, przesuniecieY,render);
+			(*itr)->update(render);
+		}
+	}
+
+	void skalowanie(double przesuniecieX, double przesuniecieY, double skala)
+	{
+		for (auto itr = kafelki.begin(); itr != kafelki.end(); itr++) {
+			(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
 		}
 	}
 };
@@ -344,6 +358,31 @@ public:
 	vector<Room*> pokoje;
 	Map() {};
 	~Map() {};
+	
+	string rodzaje_pomieszczen()
+	{
+		int a;
+		string pom;
+		a = rand() % 4;
+		if (a == 0)
+		{
+			pom = "CCCCCCCC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHCCCCCCCCCCCC/CHHHHHHHHHHHHHHHHHC/CHHHHHHHHHHHHHHHHHC/CHHHHHHHHHHHHHHHHHC/CCCCCCCCCCCCCCCCCCC";
+		}
+		if (a == 1)
+		{
+			pom = "CCCCCCC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CCCCCCC";
+		}
+		if (a == 2)
+		{
+			pom = "CCCCCCCCCC/CHHHHHHHHC/CHHHHHHHHC/CHHHHHHHHC/CCCCCCCCCC";
+		}
+		if (a == 3)
+		{
+			pom = "CCCCCCC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CCCCCCC";
+		}
+		return pom;
+	}
+
 	void ukladanie_pokoi(SDL_Texture *podloga, SDL_Texture *sciana)
 	{
 		Room* tp;
@@ -362,7 +401,7 @@ public:
 				przesuniecieY = najwieksza_wysokosc;
 			}
 
-			Room pokoj("CCCCCCC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CCCCCCC", podloga, sciana);
+			Room pokoj(rodzaje_pomieszczen(), podloga, sciana);
 
 			if (pokoj.wysokosc > najwieksza_wysokosc)
 			{
@@ -381,11 +420,19 @@ public:
 		}
 		j = 0;
 	}
-	void update(double skala, int przesuniecieX, int przesuniecieY, SDL_Renderer *render)
+	
+	void update(SDL_Renderer *render)
 	{
 		for (auto itr = pokoje.begin(); itr != pokoje.end(); itr++)
 		{
-			(*itr)->update(skala, przesuniecieX, przesuniecieY,render);
+			(*itr)->update(render);
+		}
+	}
+	
+	void skalowanie(double przesuniecieX, double przesuniecieY, double skala)
+	{
+		for (auto itr = pokoje.begin(); itr != pokoje.end(); itr++) {
+			(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
 		}
 	}
 
