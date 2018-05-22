@@ -12,6 +12,7 @@
 #include<string>
 #include<cmath>
 
+
 using namespace std;
 
 #pragma region Okno render zdarzenia
@@ -67,69 +68,6 @@ class Klasa_fps
 				}
 			}
 		};
-
-list<Mapa*> g_mapy(int liczba_pomieszczen, SDL_Texture *obr1, SDL_Texture *obr2, SDL_Texture *obr3)
-		{
-			srand(time(NULL));
-			list<Mapa*> k_mapy;
-
-			Mapa* temp;
-			
-			int a = 0;
-			int b = 0;
-			int szerokosc = 0;
-			for (int i = 0; i < liczba_pomieszczen; i++)
-			{
-				int los = rand() % 3;
-			
-				if (los == 0) 
-				{
-					temp = new cPokoj1(a,b, obr1);
-					k_mapy.push_back(temp);
-					if (szerokosc < 1000) {
-						a += temp->szer ;
-						szerokosc += temp->szer;
-					}
-					else {
-						a = 0;
-						b += temp->wys+100;
-					}
-					cout << "1mapa" << endl;
-				}
-				else if (los == 1)
-				{
-					temp = new cPokoj2(a, b , obr2);
-					k_mapy.push_back(temp);
-					if (szerokosc < 1000) {
-						a += temp->szer ;
-						szerokosc += temp->szer;
-					}
-					else {
-						a = 0;
-						b += temp->wys+100;
-					}
-					cout << "2mapa" << endl;
-				}
-				else if (los == 2)
-				{
-					temp = new cPokoj3(a , b, obr3);
-					k_mapy.push_back(temp);
-					if (szerokosc < 1000) {
-						a += temp->szer;
-						szerokosc += temp->szer;
-					}
-					else {
-						a = 0;
-						b += temp->wys+100;
-					}
-					cout << "3mapa" << endl;
-				}
-			}
-			
-
-
-			return k_mapy;
-		}
 string gen_nazw(char rodzaj)
 		{
 			string nazwa;
@@ -170,12 +108,11 @@ string gen_nazw(char rodzaj)
 int scena = 0;
 int klatka = 0;
 bool zmiana_levelu = true;
-int przesuniecieX=0;
-int przesuniecieY=0;
+double przesuniecieX=0;
+double przesuniecieY=0;
 double skala=1;
 double gowno = 1;
 SDL_Rect rect1, rect2, rect3;
-list<Mapa*> mapka;
 Klasa_fps fps;
 
 //Taimery:
@@ -240,15 +177,19 @@ int main(int argc, char * args[])
 			SDL_Texture *g_potion_zdrowia = loadTexture("Grafiki/g_potion_zdrowia.png");
 			SDL_Texture *g_zutka = loadTexture("Grafiki/g_zutka.png");
 			SDL_Texture *g_znacznik_podpalenia = loadTexture("Grafiki/g_znacznik_podpalenia.png");
+			SDL_Texture *g_statystyki = loadTexture("Grafiki/g_statystyki2.png");
+			SDL_Texture *g_obrazenia = loadTexture("Grafiki/g_obrazenia.png");
+			SDL_Texture *g_podloga = loadTexture("Grafiki/g_podloga.png");
+			SDL_Texture *g_sciana = loadTexture("Grafiki/g_sciana.png");
 		//Czcionki:
-			TTF_Font*arial = TTF_OpenFont("arial.ttf", 30);
+			TTF_Font*arial = TTF_OpenFont("sredniowiecze.ttf", 30);
 			#pragma endregion
 
 		#pragma region Dzwieki
 			Mix_Chunk *m_ciecie = Mix_LoadWAV("Dzwieki/m_ciecie.wav");
 			Mix_Chunk *m_chodzenie = Mix_LoadWAV("Dzwieki/m_chodzenie.wav");
 			Mix_Chunk *m_obrazenia = Mix_LoadWAV("Dzwieki/m_obrazenia.wav");
-			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka1.wav");
+			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka12.wav");
 
 		#pragma endregion
 
@@ -260,6 +201,8 @@ int main(int argc, char * args[])
 			///obiekty
 
 			UI ui(0, 0, 720, 1280, g_UI, g_kulazycia, g_znacznik_podpalenia);
+			
+			Map testowa_mapa;
 
 			Gracz gracz(100, 300, 100, 100, true, g_gracz,g_gracz_chodzenie);
 			Przeciwnik gnom1("Gnom", 400, 500, 100,100,10,10,0,2,g_szkielet,ustawianie_rect_spraj(32,20,4));
@@ -273,7 +216,7 @@ int main(int argc, char * args[])
 			Potion aaa("Potion Sily", 100, 100, 100, 100, g_potion_zdrowia, true, 's',0,0);
 			Potion zdrowko("Potion Zdrowia", 100, 200, 100, 100, g_potion_zdrowia, true, 'u',0,0);
 			Potion szczala("Rzutka", 200, 200, 100, 100, g_zutka, true, 'q', 5, 10);
-			Okno_eq eq(100, 10, 600, 600, false);
+			Okno_eq eq(60, 10, 700, 600, false,g_statystyki);
 			///push back test
 			//przedmioty
 			v_przedmioty.push_back(miecz1);
@@ -309,13 +252,15 @@ int main(int argc, char * args[])
 			tp = new Potion;
 			*tp = szczala;
 			przedmiksy.push_back(tp);
+
+			testowa_mapa.ukladanie_pokoi(g_podloga, g_sciana);
+
 			#pragma endregion
 
 		//Generowanie mapy:
 			if (zmiana_levelu == true)
 			{
-				mapka.clear();
-				mapka = g_mapy(8,tlo,tlo,tlo);
+				
 				zmiana_levelu = false;
 				
 			}
@@ -397,16 +342,11 @@ int main(int argc, char * args[])
 				SDL_RenderClear(render);
 				
 				///1. Tlo:
-					rect2.x = 0;
-					rect2.y = 0;
-					rect2.w = 1280;
-					rect2.h = 720;
-					
-						for (auto it = mapka.begin(); it != mapka.end(); it++) {
-						(*it)->update(render, przesuniecieX, przesuniecieY,skala);
-						}
+				
+				testowa_mapa.update(skala, przesuniecieX, przesuniecieY, render);
+
 				///2. Gracz:
-					gracz.update(render,s_postac,t_postac,przesuniecieX,przesuniecieY, skala,g_zdrowie);
+					gracz.update(render,s_postac,t_postac,przesuniecieX,przesuniecieY, skala,g_zdrowie,arial,g_obrazenia);
 
 				///3. Przeciwniki:\
 
@@ -416,7 +356,7 @@ int main(int argc, char * args[])
 					}
 					for (int i = 0; i < v_przeciwniki.size(); i++)
 					{
-						v_przeciwniki[i].update(render,s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie,g_ciecie);
+						v_przeciwniki[i].update(render,s_szkielet, t_szkielet, przesuniecieX, przesuniecieY, skala, g_zdrowie,g_ciecie,arial);
 						
 					}
 					eq.zucanie(gracz, v_przeciwniki, render,skala,przedmiksy);
@@ -442,43 +382,6 @@ int main(int argc, char * args[])
 					
 				///5. Okno ekwipunku:
 					eq.update(g_okno_ekwipunku, g_znacznik, g_okno_przedmiotu, arial, render, gracz);
-				#pragma region Napisy
-
-				//1.Sila tekstura:
-				string tekstk2 = "Obrazenia:";
-				tekstk2 += to_string((int)gracz.obrazenia);
-				char const* pchar = tekstk2.c_str();
-				SDL_Color kolor = { 255,255,255 };
-				SDL_Surface* tekst = TTF_RenderText_Blended(arial, pchar, kolor);
-				SDL_Texture* tt_sila = SDL_CreateTextureFromSurface(render, tekst);
-				//2.Zrecznosc tekstura:
-				tekstk2 = "Zrecznosc:";
-				tekstk2 += to_string(gracz.zrecznosc);
-				pchar = tekstk2.c_str();
-				SDL_Surface* tekst2 = TTF_RenderText_Blended(arial, pchar, kolor);
-				SDL_Texture* tt_zrecznosc = SDL_CreateTextureFromSurface(render, tekst2);
-				//3.Inteligencja tekstura:
-				tekstk2 = "Inteligencja:";
-				tekstk2 += to_string(gracz.inteligencja);
-				pchar = tekstk2.c_str();
-				SDL_Surface* tekst3 = TTF_RenderText_Blended(arial, pchar, kolor);
-				SDL_Texture* tt_inteligencja = SDL_CreateTextureFromSurface(render, tekst3);
-				//4.Render Napisow:
-				rect1.x = 10;
-				rect1.y = 10;
-				rect1.h = 50;
-				rect1.w = 150;
-				SDL_RenderCopy(render, tt_sila, NULL, &rect1);
-
-				rect1.y = 60;
-				SDL_RenderCopy(render, tt_zrecznosc, NULL, &rect1);
-
-				rect1.y = 110;
-				SDL_RenderCopy(render, tt_inteligencja, NULL, &rect1);
-
-
-
-				#pragma endregion
 			
 
 				//Odswiertzanie i czyszczenie:
@@ -486,19 +389,6 @@ int main(int argc, char * args[])
 				SDL_RenderPresent(render);
 				fps.koniec();
 				gracz.koniec(v_przeciwniki);
-				
-
-	
-				SDL_FreeSurface(tekst2);
-				SDL_FreeSurface(tekst);
-				SDL_FreeSurface(tekst3);
-				SDL_DestroyTexture(tt_sila);
-				SDL_DestroyTexture(tt_zrecznosc);
-				SDL_DestroyTexture(tt_inteligencja);
-				
-			
-				
-			
 			}
 
 			#pragma region Niszczenie Tekstur Muzyki i Napisow
@@ -521,6 +411,10 @@ int main(int argc, char * args[])
 			SDL_DestroyTexture(g_zdrowie);
 			SDL_DestroyTexture(g_zutka);
 			SDL_DestroyTexture(g_znacznik_podpalenia);
+			SDL_DestroyTexture(g_statystyki);
+			SDL_DestroyTexture(g_obrazenia);
+			SDL_DestroyTexture(g_sciana);
+			SDL_DestroyTexture(g_podloga);
 			Mix_FreeChunk(m_ciecie);
 			Mix_FreeChunk(m_chodzenie);
 			Mix_FreeChunk(m_obrazenia);

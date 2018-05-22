@@ -17,6 +17,9 @@ class Okno_eq;
 class Przeciwnik;
 class Przedmiot;
 
+
+
+
 class Gracz
 {
 	friend class Okno_eq;
@@ -40,6 +43,9 @@ public:
 	double zycie;
 	double max_zycie;
 	double obrazenia;
+	double ochrona;
+	int przedchwila_zadane_obrazenia;
+	SDL_Rect obr;
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 	//3. ...
 	bool tura;
@@ -53,12 +59,16 @@ public:
 	bool tura_wczasie_nalzoenia;
 	bool podpalenie = false; int licznik_podpalenia=0;
 	bool stun = false; int licznik_stuna=0;
-	
+	//3.Taimery:
+	Uint32 animacja_ciecia = 0;
+	bool b_ciecia = false;
+	Uint32 animacja_miss = 0;
+	bool b_miss = false;
 
 ///   METODY:
 	Gracz( double, double, double, double,bool, SDL_Texture*, SDL_Texture*);
 	~Gracz();
-	void update(SDL_Renderer *render,int &_s,int &_t, int przesuniecieX, int przesuniecieY,double s, SDL_Texture *zdrowie);
+	void update(SDL_Renderer *render,int &_s,int &_t, double przesuniecieX, double przesuniecieY,double s, SDL_Texture *zdrowie, TTF_Font *arial, SDL_Texture *g_obrazenia);
 	void poruszanie(Okno_eq okno_eq, double s,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_ciecie);
 	void koniec(vector<Przeciwnik> &przeciwnik);
 	void podnoszenie(vector<Przedmiot*> &przedmiot);
@@ -67,6 +77,7 @@ public:
 	void pauza(vector<Przeciwnik> &przeciwnik);
 	bool przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, int a);
 	void efekty_pasywne();
+	void animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial);
 };
 
 class Przeciwnik
@@ -93,19 +104,24 @@ public:
 	double obrazenia;
 	int zycie;
 	int max_zycie;
+	int przedchwila_zadane_obrazenia;
 	//3.Taimery:
 	Uint32 animacja_ciecia = 0; 
 	bool b_ciecia = false;
+	Uint32 animacja_miss = 0; 
+	SDL_Rect obr;
+	bool b_miss = false;
 	//4.Pasywne:
 	bool podpalenie = false;
 	bool zamrozenie = false;
 
 	Przeciwnik(string,double, double, double, double,double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
 	~Przeciwnik();
-	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie);
+	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, double przesuniecieX, double przesuniecieY, double s, SDL_Texture *zdrowie);
 	void atak(Gracz &gracz, Mix_Chunk *m_obrazenia);
-	void update(SDL_Renderer *render, int &_s, int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie, SDL_Texture *ciecie);
+	void update(SDL_Renderer *render, int &_s, int &_t, double przesuniecieX, double przesuniecieY, double s, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
 	void potion(char rodzaj);
+	void animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial);
 };
 
 class Przedmiot
@@ -134,6 +150,7 @@ public:
 	int amunicja;
 	char rodzaj;
 	bool zucane;
+	int wymagana_sila;
 //3. ...
 	SDL_Texture *tekstura;
 	SDL_Texture *tekstura_r;
@@ -143,7 +160,7 @@ public:
 	Przedmiot();
 	~Przedmiot();
 	virtual bool uzycie(Gracz &gracz) { return false; }
-	virtual void update( SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s);
+	virtual void update( SDL_Renderer *render, double przesuniecieX, double przesuniecieY, double s);
 	virtual void okno_informacji(SDL_Renderer* render, SDL_Texture *tekstura, TTF_Font *font, double px, double py);
 };
 
@@ -154,7 +171,7 @@ public:
 	Potion(){}
 	Potion(string, double, double, double, double, SDL_Texture*, bool, char,int,double);
 	bool uzycie(Gracz &gracz);
-	void update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s);
+	void update(SDL_Renderer *render, double przesuniecieX, double przesuniecieY, double s);
 };
 
 
@@ -177,30 +194,14 @@ public:
 	int prz_lotu;
 	bool prz_zutu=false;
 	Przedmiot *zutka;
+	SDL_Texture *g_statystyki;
 
-	Okno_eq(double = 100, double = 100, double = 90, double = 90, bool=false);
+	Okno_eq(double = 100, double = 100, double = 90, double = 90, bool=false, SDL_Texture* =NULL);
 	~Okno_eq();
 	void update(SDL_Texture *tekstura, SDL_Texture *g_znacznik, SDL_Texture *g_okno_przedmiotu, TTF_Font*arial,SDL_Renderer *render,Gracz &gracz);
 	void sterowanie(Gracz gracz);
 	void zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki, SDL_Renderer *render,double s, vector<Przedmiot*> &przedmiksy);
-};
-
-class Mapa
-{
-	friend class Przedmiot;
-	friend class Gracz;
-public:
-
-	double posX;
-	double posY;
-	double szer;
-	double wys;
-	bool widocznosc=true;
-	bool obrot;
-
-
-	virtual void update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s) = 0;
-
+	void statystyki(Gracz &gracz, SDL_Renderer *render,TTF_Font *arial);
 };
 
 class UI 
@@ -222,76 +223,171 @@ public:
 };
 
 
-
-
-
-
-
-
-
-
-
-///POKOJ 1///////
-class cPokoj1 : public Mapa {
-	friend class Przedmiot;
-	friend class Gracz;
-
-
+class Klocek
+{
+	friend class Map;
 public:
-	SDL_Texture * obr;
+	double posX, posY, szerokosc, wysokosc;
+	bool chodzonosc;
+	SDL_Texture *tekstura;
 
-	cPokoj1(double x, double y, SDL_Texture *tekstura) {
-		szer = 400;
-		wys = 200;
-		posX = x;
-		posY = y;
-		obr = tekstura;
-	
+	Klocek() {}
+	Klocek(double px, double py, SDL_Texture *teks)
+	{
+		posX = px;
+		posY = py;
+		tekstura = teks;
+		wysokosc = 100.0;
+		szerokosc = 100.0;
+	}
+	void update(double skala, double przesuniecieX, double przesuniecieY, SDL_Renderer *render)
+	{
+		posY += przesuniecieY;
+		posX += przesuniecieX;
+		posX *= skala;
+		posY *= skala;
+		szerokosc *= skala;
+		wysokosc *= skala;
+
+		SDL_Rect rect;
+		rect.x = posX;
+		rect.y = posY;
+		rect.h = wysokosc;
+		rect.w = szerokosc;
+		SDL_RenderCopy(render, tekstura, NULL, &rect);
 	}
 
-	virtual void update(SDL_Renderer *render,int przesuniecieX,int przesuniecieY, double s);
 };
 
-///POKOJ 2///////
-class cPokoj2 : public Mapa {
-	friend class Przedmiot;
-	friend class Gracz;
-
-
+class Room
+{
+	friend class Map;
 public:
-	SDL_Texture * obr;
+	vector<Klocek*> kafelki;
+	string uklad;
+	int szerokosc;
+	int wysokosc;
 
-	cPokoj2(double x, double y, SDL_Texture *tekstura) {
-		szer = 300;
-		wys = 300;
-		posX = x;
-		posY = y;
-		obr = tekstura;
-		
+	Room() {}
+
+	Room(string uk, SDL_Texture *podloga, SDL_Texture *sciana) {
+		uklad = uk;
+		ukladanie_kafelkow(podloga, sciana);
 	}
 
-	virtual void update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s);
+	void ukladanie_kafelkow(SDL_Texture *podloga, SDL_Texture *sciana)
+	{
+		int j = 0;
+		int k = 0;
+		int tymczasowa_szerokosc = 0;
+		Klocek* tp;
+		for (int i = 0; i < uklad.size(); i++)
+		{
+			if (uklad[i] == 'H')
+			{
+				Klocek kloc(0 + k * 100, 0 + j * 100, podloga);
+				kloc.chodzonosc = true;
+				tp = new Klocek;
+				*tp = kloc;
+				kafelki.push_back(tp);
+				tymczasowa_szerokosc++;
+				k++;
+			}
+			if (uklad[i] == '/')
+			{
+				j++;
+				k = 0;
+				tymczasowa_szerokosc = 0;
+			}
+			if (uklad[i] == 'C')
+			{
+				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
+				kloc.chodzonosc = false;
+				tp = new Klocek;
+				*tp = kloc;
+				kafelki.push_back(tp);
+				tymczasowa_szerokosc++;
+				k++;
+			}
+			if (tymczasowa_szerokosc > szerokosc)szerokosc = tymczasowa_szerokosc;
+
+		}
+		wysokosc = j;
+		j = 0;
+		k = 0;
+	}
+
+	void przesuniecie(double x, double y)
+	{
+		for (auto itr = kafelki.begin(); itr != kafelki.end(); itr++)
+		{
+			(*itr)->posX += x;
+			(*itr)->posY += y;
+		}
+	}
+
+	void update(double skala, int przesuniecieX, int przesuniecieY,SDL_Renderer *render)
+	{
+		for (auto itr = kafelki.begin(); itr != kafelki.end(); itr++)
+		{
+			(*itr)->update(skala, przesuniecieX, przesuniecieY,render);
+		}
+	}
 };
 
-///POKOJ 3///////
-class cPokoj3 : public Mapa {
-	friend class Przedmiot;
-	friend class Gracz;
-
-
+class Map
+{
 public:
-	SDL_Texture * obr;
+	vector<Room*> pokoje;
+	Map() {};
+	~Map() {};
+	void ukladanie_pokoi(SDL_Texture *podloga, SDL_Texture *sciana)
+	{
+		Room* tp;
+		int j = 0;
+		int k = 0;
+		int przesuniecieX = 0;
+		int przesuniecieY = 0;
+		int najwieksza_wysokosc = 0;
+		for (int i = 0; i < 9; i++)
+		{
+			if (i == 3 || i == 6)
+			{
+				j++;
+				k = 0;
+				przesuniecieX = 0;
+				przesuniecieY = najwieksza_wysokosc;
+			}
 
-	cPokoj3(double x, double y, SDL_Texture *tekstura) {
-		szer =  200;
-		wys = 300;
-		posX = x;
-		posY = y;
-		obr = tekstura;
-		
+			Room pokoj("CCCCCCC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CCCCCCC", podloga, sciana);
+
+			if (pokoj.wysokosc > najwieksza_wysokosc)
+			{
+				najwieksza_wysokosc = pokoj.wysokosc;
+			}
+
+			pokoj.przesuniecie(przesuniecieX * 100 + 400*k, przesuniecieY * 100*j + 400*j);
+
+			tp = new Room;
+			*tp = pokoj;
+			pokoje.push_back(tp);
+
+			
+			przesuniecieX += pokoj.szerokosc;
+			k++;
+		}
+		j = 0;
+	}
+	void update(double skala, int przesuniecieX, int przesuniecieY, SDL_Renderer *render)
+	{
+		for (auto itr = pokoje.begin(); itr != pokoje.end(); itr++)
+		{
+			(*itr)->update(skala, przesuniecieX, przesuniecieY,render);
+		}
 	}
 
-	virtual void update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s);
+private:
+
 };
 
 //Funkcje:

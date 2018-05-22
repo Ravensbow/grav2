@@ -13,6 +13,8 @@
 using namespace std;
 
 //Funkcje:
+
+
 SDL_Texture* napis(int c1,int c2,int c3, TTF_Font*arial,SDL_Renderer* render,string napis)
 {
 	SDL_Color kolor = { c1,c2,c3 };
@@ -99,7 +101,7 @@ Przeciwnik::~Przeciwnik()
 
 }
 
-void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie)
+void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t, double przesuniecieX, double przesuniecieY, double s, SDL_Texture *zdrowie)
 {
 	
 	if (aktywny == true) {
@@ -139,6 +141,7 @@ void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t
 
 void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 {
+	
 	srand(time(NULL));
 	if (tura == true &&
 		(int)posX >= (int)gracz.posX - (int)gracz.szerokosc&&
@@ -148,7 +151,29 @@ void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 		aktywny==true&&zycie>0)
 	{
 		
-		gracz.zycie -= obrazenia;
+		if (rand() % 100<(100-gracz.zrecznosc))
+		{
+			gracz.obr.x = gracz.posX; gracz.obr.y = gracz.posY + 10;
+			int zadane;
+			if (0 > obrazenia - gracz.ochrona) zadane = 0;
+			else zadane = obrazenia - gracz.ochrona;
+			gracz.zycie -= zadane;
+			gracz.przedchwila_zadane_obrazenia =zadane;
+			gracz.b_ciecia = true;
+			gracz.animacja_ciecia = SDL_GetTicks();
+			Mix_PlayChannel(1, m_obrazenia, 0);
+		}
+		else
+		{
+			gracz.b_miss = true;
+			gracz.animacja_miss = SDL_GetTicks();
+		}
+		
+		
+		
+		
+		
+		//Podpalenie:
 		if (rand() % 4 == 0)
 		{
 			gracz.podpalenie = true;
@@ -156,13 +181,13 @@ void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 			gracz.tura_wczasie_nalzoenia = gracz.tura;
 		}
 
-		Mix_PlayChannel(-1, m_obrazenia, 0);
+		
 		gracz.tura = true;
 		tura = false;
 	}
 }
 
-void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t, int przesuniecieX, int przesuniecieY, double s, SDL_Texture *zdrowie,SDL_Texture *ciecie)
+void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t, double przesuniecieX, double przesuniecieY, double s, SDL_Texture *zdrowie,SDL_Texture *ciecie,TTF_Font *arial)
 {
 	if (aktywny == true)
 	{
@@ -178,31 +203,71 @@ void Przeciwnik::update(SDL_Renderer *render, int &_s, int &_t, int przesuniecie
 
 
 		SDL_Rect rect;
+		
 		rect.x = posX;
 		rect.y = posY;
 		rect.w = wysokosc;
 		rect.h = szerokosc;
+		
+		obr.w = 50;
+		obr.h = 50;
+
 		SDL_RenderCopy(render, tekstura, &spreje[taimer_animacji(_t, _s, 4, 20)], &rect);
 		
-	//Animacja Ciecia:
-		if (b_ciecia==true)
-		{
-			SDL_RenderCopy(render, ciecie, &ustawianie_rect_spraj(60,40,6)[taimer(animacja_ciecia,6,80)], &rect);
-			if (Uint32 i=SDL_GetTicks() -animacja_ciecia > 80 * 6)
-			{
-
-				b_ciecia = false;
-			}
-		}
-		
+	//Animacja: 
+		animacje_ataku(render, ciecie, arial);
 	//Pasek Zdrowia:	
 		rect.y -= 10;
 		rect.h = wysokosc / 10;
 		rect.w = szerokosc * ((double)zycie / (double)max_zycie);
 		SDL_RenderCopy(render, zdrowie, NULL, &rect);
 		
-
 	}
+}
+void Przeciwnik::animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku,TTF_Font *arial)
+{
+	SDL_Rect rect;
+
+	rect.x = posX;
+	rect.y = posY;
+	rect.w = wysokosc;
+	rect.h = szerokosc;
+
+	obr.w = 30;
+	obr.h = 50;
+
+	
+	SDL_Texture *na = napis(255, 0, 0, arial, render, to_string(przedchwila_zadane_obrazenia));
+	//Animacja Ciecia:
+	if (b_ciecia == true)
+	{
+
+		SDL_RenderCopy(render, tekstura_ataku, &ustawianie_rect_spraj(60, 40, 6)[taimer(animacja_ciecia, 6, 80)], &rect);
+
+		obr.x += 2;
+		obr.y -= 2;
+		SDL_RenderCopy(render, na, NULL, &obr);
+		if (Uint32 i = SDL_GetTicks() - animacja_ciecia > 80 * 6)
+		{
+			
+			b_ciecia = false;
+			
+		}
+	}
+	//Animacja Ciecia:
+	if (b_miss == true)
+	{
+		na = napis(255, 255, 200, arial, render, "UNIK");
+
+		SDL_RenderCopy(render, na, NULL, &rect);
+		if (Uint32 i = SDL_GetTicks() - animacja_miss > 1000)
+		{
+
+			b_miss = false;
+			
+		}
+	}
+	SDL_DestroyTexture(na);
 }
 
 void Przeciwnik::potion(char rodzaj)
@@ -243,6 +308,7 @@ Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy,do
 	obrazenia = obraz;
 	ochrona = ochr;
 	zucane = false;
+	wymagana_sila = rand() % 5;
 	if (rodzaj == 'm')
 	{
 		zrecznosc = 2 + rand() % 10;
@@ -285,7 +351,7 @@ Przedmiot::~Przedmiot()
 
 }
 
- void Przedmiot::update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s)
+ void Przedmiot::update(SDL_Renderer *render, double przesuniecieX, double przesuniecieY, double s)
 {
 	posY += przesuniecieY;
 	posX += przesuniecieX;
@@ -340,7 +406,7 @@ Przedmiot::~Przedmiot()
 		 rect.w = 70;
 		 rect.x = px + 220;
 		 rect.y = py + 60;
-		 na = napis(255, 0, 255, font, render, "Ochr: " + to_string((int)ochrona));
+		 na = napis(20, 0, 255, font, render, "Ochr: " + to_string((int)ochrona));
 		 SDL_RenderCopy(render , na , NULL, &rect);
 		 SDL_DestroyTexture(na);
 	 }
@@ -351,7 +417,7 @@ Przedmiot::~Przedmiot()
 			 rect.w = 60;
 			 rect.x = px + 215;
 			 rect.y = py +100+(20*i);
-			 na = napis(255, 0, 100, font, render, "+" + to_string((int)sila) + " sily");
+			 na = napis(255, 0, 20, font, render, "+" + to_string((int)sila) + " sily");
 			 SDL_RenderCopy(render,na , NULL, &rect);
 			 i++;
 			 SDL_DestroyTexture(na);
@@ -362,7 +428,7 @@ Przedmiot::~Przedmiot()
 			 rect.w = 100;
 			 rect.x = px + 205;
 			 rect.y = py + 100 + (20 * i);
-			 na = napis(100, 0, 255, font, render, "+" + to_string((int)zrecznosc) + " zrecznosci");
+			 na = napis(20, 255, 25, font, render, "+" + to_string((int)zrecznosc) + " zrecznosci");
 			 SDL_RenderCopy(render, na , NULL, &rect);
 			 i++;
 			 SDL_DestroyTexture(na);
@@ -410,7 +476,7 @@ bool Potion::uzycie(Gracz &gracz)
 	}
 	return true;
 }
-void Potion::update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s)
+void Potion::update(SDL_Renderer *render, double przesuniecieX, double przesuniecieY, double s)
 {
 	
 	posY += przesuniecieY;
@@ -433,13 +499,14 @@ void Potion::update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, 
 
 //Okno EQ:
 
-Okno_eq::Okno_eq(double px, double py, double wy, double sze,bool przel)
+Okno_eq::Okno_eq(double px, double py, double wy, double sze,bool przel,SDL_Texture *statystyki)
 {
 	posX = px;
 	posY = py;
 	szerokosc = sze;
 	wysokosc = wy;
 	prz_eq = przel;
+	g_statystyki = statystyki;
 }
 
 Okno_eq::~Okno_eq()
@@ -458,7 +525,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 		rect.w = wysokosc;
 		rect.h = szerokosc;
 		SDL_RenderCopy(render, tekstura, NULL, &rect);
-		rect.x = 350-90;
+		rect.x = 345-90;
 		rect.y = 80-90;
 		rect.w = 50;
 		rect.h = 50;
@@ -469,7 +536,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 			if (i % 4 == 0)
 			{
 				rect.y = rect.y + 90;
-				rect.x = 350;
+				rect.x = 345;
 			}
 			
 			rect.w = 50;
@@ -598,6 +665,8 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 							gracz.zrecznosc -= gracz.zalozone[0].zrecznosc;
 							gracz.inteligencja -= gracz.zalozone[0].inteligencja;
 							gracz.obrazenia -= gracz.zalozone[0].obrazenia;
+							gracz.ochrona -= gracz.zalozone[0].ochrona;
+
 						}
 
 
@@ -607,6 +676,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 						gracz.zrecznosc += (*itr)->zrecznosc;
 						gracz.inteligencja += (*itr)->inteligencja;
 						gracz.obrazenia += (*itr)->obrazenia;
+						gracz.ochrona += (*itr)->ochrona;
 
 
 						itr = gracz.ekwipunek.erase(itr);
@@ -625,13 +695,14 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 							gracz.zrecznosc -= gracz.zalozone[1].zrecznosc;
 							gracz.obrazenia -= gracz.zalozone[1].obrazenia;
 							gracz.inteligencja -= gracz.zalozone[1].inteligencja;
+							gracz.ochrona -= gracz.zalozone[1].ochrona;
 						}
 						gracz.zalozone[1] = *gracz.ekwipunek[i];
 						gracz.sila += (*itr)->sila;
 						gracz.zrecznosc += (*itr)->zrecznosc;
 						gracz.inteligencja += (*itr)->inteligencja;
 						gracz.obrazenia += (*itr)->obrazenia;
-
+						gracz.ochrona += (*itr)->ochrona;
 
 
 						itr = gracz.ekwipunek.erase(itr);
@@ -651,13 +722,14 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 							gracz.obrazenia -= gracz.zalozone[2].obrazenia;
 							gracz.zrecznosc -= gracz.zalozone[2].zrecznosc;
 							gracz.inteligencja -= gracz.zalozone[2].inteligencja;
+							gracz.ochrona -= gracz.zalozone[2].ochrona;
 						}
 						gracz.zalozone[2] = *gracz.ekwipunek[i];
 						gracz.sila += (*itr)->sila;
 						gracz.zrecznosc += (*itr)->zrecznosc;
 						gracz.inteligencja += (*itr)->inteligencja;
 						gracz.obrazenia += (*itr)->obrazenia;
-
+						gracz.ochrona += (*itr)->ochrona;
 						itr = gracz.ekwipunek.erase(itr);
 						break;
 
@@ -696,12 +768,13 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 
 		}
 		i = 0;
+		statystyki(gracz, render, arial);
 		//Render Zalozonych:
 		for (int c = 0; c < gracz.zalozone.size(); c++)
 		{
 			if (gracz.zalozone[c].rodzaj == 'm')
 			{
-				rect.x = 150;
+				rect.x = 134;
 				rect.y = 275;
 				rect.w = 50;
 				rect.h = 50;
@@ -709,7 +782,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 			}
 			if (gracz.zalozone[c].rodzaj == 't')
 			{
-				rect.x = 205;
+				rect.x = 194;
 				rect.y = 275;
 				rect.w = 50;
 				rect.h = 50;
@@ -717,13 +790,14 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 			}
 			if (gracz.zalozone[c].rodzaj == 'z')
 			{
-				rect.x = 255;
+				rect.x = 254;
 				rect.y = 275;
 				rect.w = 50;
 				rect.h = 50;
 				SDL_RenderCopy(render, gracz.zalozone[c].tekstura, NULL, &rect);
 			}
 		}
+		
 		
 	}
 }
@@ -823,6 +897,48 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 	}
 }
 
+void Okno_eq::statystyki(Gracz &gracz, SDL_Renderer *render,TTF_Font *arial)
+{
+	SDL_Rect rect;
+	rect.x = posX+59;
+	rect.y = posY+370;
+	rect.h = 174;
+	rect.w = 200;
+	SDL_RenderCopy(render, g_statystyki, NULL, &rect);
+	//Sila:
+	SDL_Texture *na = napis(255, 255, 255, arial, render, to_string((int)gracz.sila));
+	rect.x += 60;
+	rect.y += 0;
+	rect.w = to_string((int)gracz.sila).size()*10;
+	rect.h = 20;
+	SDL_RenderCopy(render, na, NULL, &rect);
+	//Zrecznosc:
+	na = napis(255, 255, 255, arial, render, to_string((int)gracz.zrecznosc));
+	rect.y += 50;
+	rect.w = to_string((int)gracz.zrecznosc).size() * 10;
+	SDL_RenderCopy(render, na, NULL, &rect);
+	SDL_DestroyTexture(na);
+	//Inteligencja:
+	na = napis(255, 255, 255, arial, render, to_string((int)gracz.inteligencja));
+	rect.y += 50;
+	rect.w = to_string((int)gracz.inteligencja).size() * 10;
+	SDL_RenderCopy(render, na, NULL, &rect);
+	SDL_DestroyTexture(na);
+	//Max HP:
+	na = napis(255, 255, 255, arial, render, to_string((int)gracz.max_zycie));
+	rect.y += 50;
+	rect.w = to_string((int)gracz.max_zycie).size() * 10;
+	SDL_RenderCopy(render, na, NULL, &rect);
+	SDL_DestroyTexture(na);
+	//Obrona:
+	na = napis(255, 255, 255, arial, render, to_string((int)gracz.ochrona));
+	rect.y = posY +370;
+	rect.x += 90;
+	rect.w = to_string((int)gracz.ochrona).size() * 10;
+	SDL_RenderCopy(render, na, NULL, &rect);
+	SDL_DestroyTexture(na);
+}
+
 
 //Gracz:
 
@@ -834,14 +950,15 @@ Gracz::Gracz(double px, double py, double wy, double sze,bool tur, SDL_Texture *
 	wysokosc = wy;
 	tura = true;
 	tekstura = gracz;
-	sila=10;
-	zrecznosc = 10;
-	inteligencja = 10;
+	sila=3;
+	zrecznosc = 15;
+	inteligencja = 0;
 	zalozone.resize(3);
 	chodzenie = animacja_chodu;
 	zycie = 20;
 	max_zycie = 20;
 	obrazenia = 4;
+	ochrona = 0;
 	
 }
 
@@ -850,7 +967,7 @@ Gracz::~Gracz()
 
 }
 
-void Gracz::update(SDL_Renderer *render,int &_s,int &_t,int przesuniecieX,int przesuniecieY, double s,SDL_Texture *zdrowie)
+void Gracz::update(SDL_Renderer *render,int &_s,int &_t,double przesuniecieX,double przesuniecieY, double s,SDL_Texture *zdrowie,TTF_Font *arial,SDL_Texture *g_obrazenia)
 {
 	
 	posY += przesuniecieY;
@@ -866,16 +983,19 @@ void Gracz::update(SDL_Renderer *render,int &_s,int &_t,int przesuniecieX,int pr
 	rect.w = wysokosc;
 	rect.h = szerokosc;
 	SDL_RenderCopyEx(render, tekstura, &ustawianie_rect_spraj(60, 40, 2)[taimer_animacji(_t, _s, 2,40)], &rect, 0, NULL,flip);
+	animacje_ataku(render, g_obrazenia, arial);
 	SDL_RenderCopyEx(render, zalozone[0].tekstura_r, &ustawianie_rect_spraj(60, 40, 2)[taimer_animacji(_t, _s, 2, 40)], &rect, 0, NULL, flip);//Render zbroji na postaci
 	SDL_RenderCopyEx(render, zalozone[1].tekstura_r, &ustawianie_rect_spraj(60, 40, 2)[taimer_animacji(_t, _s, 2, 40)], &rect, 0, NULL, flip);//Render miecza na postaci
 	
-
+	
 	
 	rect.y -= 10;
 	rect.h = wysokosc/10;
 
 	rect.w = szerokosc * ((double)zycie / (double)max_zycie);
 	SDL_RenderCopy(render, zdrowie, NULL, &rect);
+
+
 }
 
 bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
@@ -1073,11 +1193,21 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 		{
 			if ((int)znaczX == (int)przeciwnik[i].posX && (int)znaczY == (int)przeciwnik[i].posY&&przeciwnik[i].aktywny == true && GetAsyncKeyState(VK_RETURN))
 			{
-
-				przeciwnik[i].zycie -= obrazenia;
-				przeciwnik[i].b_ciecia = true;
-				przeciwnik[i].animacja_ciecia = SDL_GetTicks();
-				Mix_PlayChannel(-1, m_ciecie, 0);
+				srand(time(NULL));
+				if (rand()%100<70+((int)zrecznosc-(int)(przeciwnik[i].zrecznosc/2)))
+				{
+					przeciwnik[i].obr.x = przeciwnik[i].posX; przeciwnik[i].obr.y = przeciwnik[i].posY+10;
+					przeciwnik[i].zycie -= obrazenia;
+					przeciwnik[i].przedchwila_zadane_obrazenia = obrazenia;
+					przeciwnik[i].b_ciecia = true;
+					przeciwnik[i].animacja_ciecia = SDL_GetTicks();
+					Mix_PlayChannel(-1, m_ciecie, 0);
+				}
+				else
+				{
+					przeciwnik[i].b_miss = true;
+					przeciwnik[i].animacja_miss = SDL_GetTicks();
+				}
 				wlaczanie_ataku = false;
 				tura = false;
 				
@@ -1128,6 +1258,52 @@ void Gracz::efekty_pasywne()
 	{
 
 	}
+}
+
+void Gracz::animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial)
+{
+	SDL_Rect rect;
+
+	rect.x = posX;
+	rect.y = posY;
+	rect.w = wysokosc;
+	rect.h = szerokosc;
+
+	obr.w = 60;
+	obr.h = 100;
+
+
+	SDL_Texture *na = napis(255, 50, 50, arial, render, to_string(przedchwila_zadane_obrazenia));
+	//Animacja Ciecia:
+	if (b_ciecia == true)
+	{
+
+		SDL_RenderCopy(render, tekstura_ataku, NULL, &rect);
+
+		obr.x += 2;
+		obr.y -= 2;
+		SDL_RenderCopy(render, na, NULL, &obr);
+		if (Uint32 i = SDL_GetTicks() - animacja_ciecia > 80 * 6)
+		{
+
+			b_ciecia = false;
+
+		}
+	}
+	//Animacja Ciecia:
+	if (b_miss == true)
+	{
+		na = napis(255, 255, 200, arial, render, "UNIK");
+
+		SDL_RenderCopy(render, na, NULL, &rect);
+		if (Uint32 i = SDL_GetTicks() - animacja_miss > 1000)
+		{
+
+			b_miss = false;
+
+		}
+	}
+	SDL_DestroyTexture(na);
 }
 //UI:
 
@@ -1221,58 +1397,4 @@ void UI::update(Gracz gracz,SDL_Renderer* render, TTF_Font*arial)
 
 
 
-
-
-//Mapa:
-
-	///1.Pokoj1:
-
-void cPokoj1::update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s) {
-	posY += przesuniecieY;
-	posX += przesuniecieX;
-	posX *= s;
-	posY *= s;
-	szer *= s;
-	wys *= s;
-	SDL_Rect rect;
-	rect.x = posX;
-	rect.y = posY;
-	rect.w = wys;
-	rect.h = szer;
-	SDL_RenderCopy(render, obr, NULL, &rect);
-
-}
-
-	///2.Pokoj2
-
-void cPokoj2::update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s) {
-	posY += przesuniecieY;
-	posX += przesuniecieX;
-	posX *= s;
-	posY *= s;
-	szer *= s;
-	wys *= s;
-	SDL_Rect rect;
-	rect.x = posX;
-	rect.y = posY;
-	rect.w = wys;
-	rect.h = szer;
-	SDL_RenderCopy(render, obr, NULL, &rect);
-}
-
-	///3.Pokoj3
-
-void cPokoj3::update(SDL_Renderer *render, int przesuniecieX, int przesuniecieY, double s) {
-	posY += przesuniecieY;
-	posX += przesuniecieX;
-	posX *= s;
-	posY *= s;
-	szer *= s;
-	wys *= s;
-	SDL_Rect rect;
-	rect.x = posX;
-	rect.y = posY;
-	rect.w = wys;
-	rect.h = szer;
-	SDL_RenderCopy(render, obr, NULL, &rect);
-}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
