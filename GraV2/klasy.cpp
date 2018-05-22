@@ -105,32 +105,32 @@ void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t
 {
 	
 	if (aktywny == true) {
-		if (tura == true && (int)posX > (int)gracz1.posX&&
-			(int)posX != (int)gracz1.posX + (int)gracz1.szerokosc &&
-			(int)posX != (int)gracz1.posX - (int)gracz1.szerokosc)
+		if (tura == true && posX > gracz1.posX&&
+			posX != gracz1.posX + gracz1.szerokosc &&
+			posX != gracz1.posX - gracz1.szerokosc)
 		{
 			posX = posX - szerokosc;
 			gracz1.tura = true;
 			tura = false;
 		}
-		else if (tura == true && (int)posX < (int)gracz1.posX &&
-			(int)posX != (int)gracz1.posX + (int)gracz1.szerokosc &&
-			(int)posX != (int)gracz1.posX - (int)gracz1.szerokosc)
+		else if (tura == true && posX < gracz1.posX &&
+			posX != gracz1.posX + gracz1.szerokosc &&
+			posX != gracz1.posX - gracz1.szerokosc)
 		{
 			posX = posX + szerokosc;
 			gracz1.tura = true;
 			tura = false;
 		}
-		else if (tura == true && (int)posY < (int)gracz1.posY&&
-			(int)posY != (int)gracz1.posY + (int)gracz1.wysokosc &&
-			(int)posY != (int)gracz1.posY - (int)gracz1.wysokosc)
+		else if (tura == true && posY < gracz1.posY&&
+			posY != gracz1.posY + gracz1.wysokosc &&
+			posY != gracz1.posY - gracz1.wysokosc)
 		{
 			posY = posY + szerokosc;
 			gracz1.tura = true;
 			tura = false;
 		}
-		else if (tura == true && (int)posY > (int)gracz1.posY&& (int)posY != (int)gracz1.posY + (int)gracz1.wysokosc &&
-			(int)posY != (int)gracz1.posY - (int)gracz1.wysokosc)
+		else if (tura == true && posY > gracz1.posY&& posY != gracz1.posY + gracz1.wysokosc &&
+			posY != gracz1.posY - gracz1.wysokosc)
 		{
 			posY = posY - szerokosc;
 			gracz1.tura = true;
@@ -1167,22 +1167,23 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 	
 		
 		
-		if (GetAsyncKeyState(VK_LEFT) && rect.x - 100 >= posX - 100 )
+		if (GetAsyncKeyState(VK_LEFT) && znaczX - szerokosc >= posX - szerokosc)
 		{
 			znaczX -= szerokosc;
 			SDL_Delay(200);
 		}
-		if (GetAsyncKeyState(VK_RIGHT) && rect.x + 100 <= posX + 100)
+		if (GetAsyncKeyState(VK_RIGHT) && znaczX + szerokosc <= posX + szerokosc)
 		{
 			znaczX += szerokosc;
 			SDL_Delay(200);
 		}
-		if (GetAsyncKeyState(VK_UP) &&rect.y- 100 >= posY - 100)
+		cout<< znaczY - wysokosc <<":"<< posY - wysokosc <<endl;
+		if (GetAsyncKeyState(VK_UP) && znaczY - wysokosc >= posY - wysokosc)
 		{
 			znaczY -= szerokosc;
 			SDL_Delay(200);
 		}
-		if (GetAsyncKeyState(VK_DOWN) &&rect.y + 100 <= posY + 100)
+		if (GetAsyncKeyState(VK_DOWN) && znaczY + wysokosc <= posY + wysokosc)
 		{
 			znaczY += szerokosc;
 			SDL_Delay(200);
@@ -1191,7 +1192,8 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 		
 		for (int i = 0; i < przeciwnik.size(); i++)
 		{
-			if ((int)znaczX == (int)przeciwnik[i].posX && (int)znaczY == (int)przeciwnik[i].posY&&przeciwnik[i].aktywny == true && GetAsyncKeyState(VK_RETURN))
+			cout << znaczY << ":" << przeciwnik[i].posX << endl;
+			if (znaczX == przeciwnik[i].posX && znaczY == przeciwnik[i].posY&&przeciwnik[i].aktywny == true && GetAsyncKeyState(VK_RETURN))
 			{
 				srand(time(NULL));
 				if (rand()%100<70+((int)zrecznosc-(int)(przeciwnik[i].zrecznosc/2)))

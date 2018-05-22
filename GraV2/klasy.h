@@ -33,8 +33,8 @@ public:
 	double posY;
 	double szerokosc;
 	double wysokosc;
-	int znaczX = 0;
-	int znaczY = 0;
+	double znaczX = 0;
+	double znaczY = 0;
 
 	//2.Statystyki:
 	double sila;
@@ -68,7 +68,7 @@ public:
 ///   METODY:
 	Gracz( double, double, double, double,bool, SDL_Texture*, SDL_Texture*);
 	~Gracz();
-	void update(SDL_Renderer *render,int &_s,int &_t, double przesuniecieX, double przesuniecieY,double s, SDL_Texture *zdrowie, TTF_Font *arial, SDL_Texture *g_obrazenia);
+	void update(SDL_Renderer *render,int &_s,int &_t, double przesuniecieX, double przesuniecieY, SDL_Texture *zdrowie, TTF_Font *arial, SDL_Texture *g_obrazenia);
 	void poruszanie(Okno_eq okno_eq, double s,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_ciecie);
 	void koniec(vector<Przeciwnik> &przeciwnik);
 	void podnoszenie(vector<Przedmiot*> &przedmiot);
@@ -227,7 +227,10 @@ class Klocek
 {
 	friend class Map;
 public:
-	double posX, posY, szerokosc, wysokosc;
+	double posX;
+	double posY;
+	double szerokosc;
+	double wysokosc;
 	bool chodzonosc;
 	SDL_Texture *tekstura;
 

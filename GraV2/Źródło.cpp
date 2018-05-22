@@ -321,18 +321,18 @@ int main(int argc, char * args[])
 					skala = 1;
 					if (GetAsyncKeyState(0x5A)) // scroll dow
 					{
-						skala -= 0.2;
-						gowno -= 0.2;
+						skala -= 0.02;
+						gowno -= 0.02;
 					}
 					else if (GetAsyncKeyState(0x58)) // scroll up
 					{
-						skala += 0.2;
-						gowno += 0.2;
+						skala += 0.02;
+						gowno += 0.02;
 					}
 				
-					gracz.poruszanie(eq, gowno,v_przeciwniki,m_chodzenie);
+					gracz.poruszanie(eq, skala,v_przeciwniki,m_chodzenie);
 					gracz.efekty_pasywne();
-				///1.1 Gracz atak:
+				///1.1 Gracz atak:6
 					gracz.atak_przycisk();
 					
 				///2.UI
@@ -343,7 +343,7 @@ int main(int argc, char * args[])
 				
 				///1. Tlo:
 				
-				testowa_mapa.update(skala, przesuniecieX, przesuniecieY, render);
+					testowa_mapa.update(skala, przesuniecieX, przesuniecieY, render);
 
 				///2. Gracz:
 					gracz.update(render,s_postac,t_postac,przesuniecieX,przesuniecieY, skala,g_zdrowie,arial,g_obrazenia);
