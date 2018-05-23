@@ -148,11 +148,12 @@ public:
 	double inteligencja;
 	double obrazenia;
 	double ochrona;
+	double wymagana_sila;
 //3.Rodzaj:
 	int amunicja;
 	char rodzaj;
 	bool zucane;
-	int wymagana_sila;
+	
 //3. ...
 	SDL_Texture *tekstura;
 	SDL_Texture *tekstura_r;
@@ -235,6 +236,7 @@ public:
 	double szerokosc;
 	double wysokosc;
 	bool chodzonosc;
+	char rodzaj;
 	SDL_Texture *tekstura;
 
 	Klocek() {}
@@ -245,6 +247,7 @@ public:
 		tekstura = teks;
 		wysokosc = 100.0;
 		szerokosc = 100.0;
+		rodzaj = NULL;
 	}
 	void update(SDL_Renderer *render)
 	{
@@ -275,6 +278,7 @@ class Room
 public:
 	vector<Klocek*> kafelki;
 	string uklad;
+	Klocek kanalup, kanaldown, kanalright, kanalleft;
 	int szerokosc;
 	int wysokosc;
 
@@ -319,6 +323,54 @@ public:
 				tymczasowa_szerokosc++;
 				k++;
 			}
+			if (uklad[i] == '>')
+			{
+				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
+				kloc.chodzonosc = true;
+				kloc.rodzaj = '>';
+				kanalright = kloc;
+				tp = new Klocek;
+				*tp = kloc;
+				kafelki.push_back(tp);
+				tymczasowa_szerokosc++;
+				k++;
+			}
+			if (uklad[i] == '<')
+			{
+				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
+				kloc.chodzonosc = true;
+				kloc.rodzaj = '<';
+				kanalleft = kloc;
+				tp = new Klocek;
+				*tp = kloc;
+				kafelki.push_back(tp);
+				tymczasowa_szerokosc++;
+				k++;
+			}
+			if (uklad[i] == ',')
+			{
+				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
+				kloc.chodzonosc = true;
+				kloc.rodzaj = ',';
+				kanaldown = kloc;
+				tp = new Klocek;
+				*tp = kloc;
+				kafelki.push_back(tp);
+				tymczasowa_szerokosc++;
+				k++;
+			}
+			if (uklad[i] == '`')
+			{
+				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
+				kloc.chodzonosc = true;
+				kloc.rodzaj = '`';
+				kanalup = kloc;
+				tp = new Klocek;
+				*tp = kloc;
+				kafelki.push_back(tp);
+				tymczasowa_szerokosc++;
+				k++;
+			}
 			if (tymczasowa_szerokosc > szerokosc)szerokosc = tymczasowa_szerokosc;
 
 		}
@@ -350,6 +402,107 @@ public:
 			(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
 		}
 	}
+
+	void dodawanie_sciezek(Room* pokoje, SDL_Texture *podloga)
+	{
+		Klocek* tp;
+		bool przerwac = false;
+
+		double pxl = kanalleft.posX;
+		double pxd = kanaldown.posX;
+		double pxr = kanalright.posX;
+		double pxu = kanalup.posX;
+
+		double pyl = kanalleft.posY;
+		double pyd = kanaldown.posY;
+		double pyr = kanalright.posY;
+		double pyu = kanalup.posY;
+		
+		
+		vector<Klocek*> kafelkiup;
+		vector<Klocek*> kafelkidown;
+		vector<Klocek*> kafelkiright;
+		vector<Klocek*> kafelkileft;
+
+		
+
+		for (int i = 0; i < 14; i++) {  //Gora
+			if (przerwac == true)break;
+
+			if(i!=0)pyu -= 100;
+			
+			Klocek kloc(pxu,pyu,podloga);
+			kloc.chodzonosc = true;
+			tp = new Klocek;
+			*tp = kloc;
+			kafelkiup.push_back(tp);
+			for (auto itr = pokoje->kafelki.begin(); itr != pokoje->kafelki.end(); itr++) {
+				if (kloc.posX == (*itr)->posX&&kloc.posY == (*itr)->posY)przerwac = true;
+			}
+			
+		}
+		for (int i = 0; i < 14; i++) {  //Dol
+			if (przerwac == true)break;
+
+			if (i != 0)pyd += 100;
+
+			Klocek kloc(pxd, pyd, podloga);
+			kloc.chodzonosc = true;
+			tp = new Klocek;
+			*tp = kloc;
+			kafelkidown.push_back(tp);
+			for (auto itr = pokoje->kafelki.begin(); itr != pokoje->kafelki.end(); itr++) {
+				if (kloc.posX == (*itr)->posX&&kloc.posY == (*itr)->posY)przerwac = true;
+			}
+
+		}
+		for (int i = 0; i < 14; i++) {  //Prawo
+			if (przerwac == true)break;
+
+			if (i != 0)pxr += 100;
+
+			Klocek kloc(pxr, pyr, podloga);
+			kloc.chodzonosc = true;
+			tp = new Klocek;
+			*tp = kloc;
+			kafelkiright.push_back(tp);
+			for (auto itr = pokoje->kafelki.begin(); itr != pokoje->kafelki.end(); itr++) {
+				if (kloc.posX == (*itr)->posX&&kloc.posY == (*itr)->posY)przerwac = true;
+			}
+
+		}
+		for (int i = 0; i < 14; i++) {  //Lewo
+			if (przerwac == true)break;
+
+			if (i != 0)pyl -= 100;
+
+			Klocek kloc(pxl, pyl, podloga);
+			kloc.chodzonosc = true;
+			tp = new Klocek;
+			*tp = kloc;
+			kafelkileft.push_back(tp);
+			for (auto itr = pokoje->kafelki.begin(); itr != pokoje->kafelki.end(); itr++) {
+				if (kloc.posX == (*itr)->posX&&kloc.posY == (*itr)->posY)przerwac = true;
+			}
+
+		}
+
+		if (kafelkileft.size() < 14)kafelki.insert(std::end(kafelki), std::begin(kafelkileft), std::end(kafelkileft));
+		if (kafelkiright.size() < 14)kafelki.insert(std::end(kafelki), std::begin(kafelkiright), std::end(kafelkiright));
+		if (kafelkiup.size() < 14)kafelki.insert(std::end(kafelki), std::begin(kafelkiup), std::end(kafelkiup));
+		if (kafelkidown.size() < 14)kafelki.insert(std::end(kafelki), std::begin(kafelkidown), std::end(kafelkidown));
+
+	}
+
+	void kanalowanie()
+	{
+		for (auto i = kafelki.begin(); i != kafelki.end(); i++) {
+			if ((*i)->rodzaj == '`')kanalup = *(*i);
+			if ((*i)->rodzaj == ',')kanaldown = *(*i);
+			if ((*i)->rodzaj == '>')kanalright = *(*i);
+			if ((*i)->rodzaj == '<')kanalleft = *(*i);
+		}
+	}
 };
 
 class Map
@@ -366,19 +519,19 @@ public:
 		a = rand() % 4;
 		if (a == 0)
 		{
-			pom = "CCCCCCCC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHCCCCCCCCCCCC/CHHHHHHHHHHHHHHHHHC/CHHHHHHHHHHHHHHHHHC/CHHHHHHHHHHHHHHHHHC/CCCCCCCCCCCCCCCCCCC";
+			pom = "CCCC`CCC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHCCCCCCCCCCCC/<HHHHHHHHHHHHHHHHH>/CHHHHHHHHHHHHHHHHHC/CHHHHHHHHHHHHHHHHHC/C,CCCCCCC,CCCCCCC,C";
 		}
 		if (a == 1)
 		{
-			pom = "CCCCCCC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CCCCCCC";
+			pom = "CCC`CCC/CHHHHHC/CHHHHHC/<HHHHH>/CHHHHHC/CHHHHHC/CCC,CCC";
 		}
 		if (a == 2)
 		{
-			pom = "CCCCCCCCCC/CHHHHHHHHC/CHHHHHHHHC/CHHHHHHHHC/CCCCCCCCCC";
+			pom = "CCCC`CCCCC/CHHHHHHHHC/<HHHHHHHH>/CHHHHHHHHC/CCCC,CCCCC";
 		}
 		if (a == 3)
 		{
-			pom = "CCCCCCC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CHHHHHC/CCCCCCC";
+			pom = "CCC`CCC/CHHHHHC/CHHHHHC/<HHHHH>/CHHHHHC/CHHHHHC/CCC,CCC";
 		}
 		return pom;
 	}
@@ -419,13 +572,33 @@ public:
 			k++;
 		}
 		j = 0;
+
+		for (auto i = pokoje.begin(); i != pokoje.end(); i++) {
+			(*i)->kanalowanie();
+		}
+		
+		for (int i = 0; i < 9; i++) {
+			for (int j = 0; j < 9; j++) {
+				if(j!=i)pokoje[i]->dodawanie_sciezek(pokoje[j], podloga);
+			 }
+		}
+		
+		/*pokoje[0]->dodawanie_sciezek(pokoje[3], podloga); pokoje[0]->dodawanie_sciezek(pokoje[1], podloga);
+		pokoje[1]->dodawanie_sciezek(pokoje[2], podloga); pokoje[1]->dodawanie_sciezek(pokoje[4], podloga); pokoje[1]->dodawanie_sciezek(pokoje[5], podloga);
+		pokoje[2]->dodawanie_sciezek(pokoje[5], podloga);
+		pokoje[3]->dodawanie_sciezek(pokoje[4], podloga); pokoje[3]->dodawanie_sciezek(pokoje[6], podloga);
+		pokoje[4]->dodawanie_sciezek(pokoje[5], podloga); pokoje[4]->dodawanie_sciezek(pokoje[7], podloga);
+		pokoje[5]->dodawanie_sciezek(pokoje[8], podloga);
+		pokoje[6]->dodawanie_sciezek(pokoje[7], podloga);
+		pokoje[7]->dodawanie_sciezek(pokoje[8], podloga);*/
 	}
 	
 	void update(SDL_Renderer *render)
 	{
-		for (auto itr = pokoje.begin(); itr != pokoje.end(); itr++)
+		
+		for (int i=8;i>=0;i--)
 		{
-			(*itr)->update(render);
+			pokoje[i]->update(render);
 		}
 	}
 	
@@ -435,9 +608,6 @@ public:
 			(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
 		}
 	}
-
-private:
-
 };
 
 //Funkcje:

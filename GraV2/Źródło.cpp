@@ -71,7 +71,7 @@ class Klasa_fps
 string gen_nazw(char rodzaj)
 		{
 			string nazwa;
-			srand(time(NULL));
+			
 			int a = rand() % 10;
 			if (rodzaj == 'm')
 			{
@@ -98,7 +98,7 @@ string gen_nazw(char rodzaj)
 			{
 
 			}
-			srand(time(NULL));
+			
 			return nazwa;
 		}
 	
@@ -179,8 +179,8 @@ int main(int argc, char * args[])
 			SDL_Texture *g_znacznik_podpalenia = loadTexture("Grafiki/g_znacznik_podpalenia.png");
 			SDL_Texture *g_statystyki = loadTexture("Grafiki/g_statystyki2.png");
 			SDL_Texture *g_obrazenia = loadTexture("Grafiki/g_obrazenia.png");
-			SDL_Texture *g_podloga = loadTexture("Grafiki/g_podloga.png");
-			SDL_Texture *g_sciana = loadTexture("Grafiki/g_sciana.png");
+			SDL_Texture *g_podloga = loadTexture("Grafiki/g_podloga2.png");
+			SDL_Texture *g_sciana = loadTexture("Grafiki/g_sciana2.png");
 		//Czcionki:
 			TTF_Font*arial = TTF_OpenFont("sredniowiecze.ttf", 30);
 			#pragma endregion

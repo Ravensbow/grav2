@@ -142,7 +142,7 @@ void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t
 void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 {
 	
-	srand(time(NULL));
+	
 	if (tura == true &&
 		(int)posX >= (int)gracz.posX - (int)gracz.szerokosc&&
 		(int)posX<=(int)gracz.posX + (int)gracz.szerokosc && 
@@ -308,6 +308,7 @@ Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy,do
 	rodzaj = rodz;
 	obrazenia = obraz;
 	ochrona = ochr;
+	
 	zucane = false;
 	wymagana_sila = rand() % 5;
 	if (rodzaj == 'm')
@@ -345,6 +346,7 @@ Przedmiot::Przedmiot()
 	obrazenia = 0;
 	zrecznosc = 0;
 	inteligencja = 0;
+	wymagana_sila = 0;
 }
 
 Przedmiot::~Przedmiot()
@@ -378,11 +380,18 @@ Przedmiot::~Przedmiot()
 	 rect.x = px+35;
 	 rect.y = py+65;
 	 SDL_RenderCopy(render, tekstura, NULL, &rect);
+	 rect.h = 40;
+	 rect.w = to_string((int)wymagana_sila).size() * 30;
+	 rect.x = px + 35+70;
+	 rect.y = py + 65;
+	 SDL_Texture *na = napis(255, 255, 255, font, render,":"+ to_string((int)wymagana_sila));
+	 SDL_RenderCopy(render, na, NULL, &rect);
+	
 	 rect.h = 20;
 	 rect.w = nazwa.size()*10;
 	 rect.x = px+205-(nazwa.size()*5);
 	 rect.y = py+20;
-	 SDL_Texture *na = napis(0, 0, 0, font, render, nazwa);
+	 na = napis(0, 0, 0, font, render, nazwa);
 	 SDL_RenderCopy(render, na, NULL, &rect);
 	 SDL_DestroyTexture(na);
 	 if (obrazenia > 0)
@@ -479,7 +488,8 @@ bool Potion::uzycie(Gracz &gracz)
 		gracz.zycie += (int)(0.25*gracz.max_zycie);
 		if (gracz.zycie > gracz.max_zycie)gracz.zycie = gracz.max_zycie;
 	}
-	return true;
+	if(rodzaj!='q')return true;
+	else return false;
 }
 void Potion::update(SDL_Renderer *render)
 {
@@ -906,7 +916,7 @@ void Okno_eq::statystyki(Gracz &gracz, SDL_Renderer *render,TTF_Font *arial)
 	//Sila:
 	SDL_Texture *na = napis(255, 255, 255, arial, render, to_string((int)gracz.sila));
 	rect.x += 60;
-	rect.y += 0;
+	rect.y += 2;
 	rect.w = to_string((int)gracz.sila).size()*10;
 	rect.h = 20;
 	SDL_RenderCopy(render, na, NULL, &rect);
@@ -930,7 +940,7 @@ void Okno_eq::statystyki(Gracz &gracz, SDL_Renderer *render,TTF_Font *arial)
 	SDL_DestroyTexture(na);
 	//Obrona:
 	na = napis(255, 255, 255, arial, render, to_string((int)gracz.ochrona));
-	rect.y = posY +370;
+	rect.y = posY +372;
 	rect.x += 90;
 	rect.w = to_string((int)gracz.ochrona).size() * 10;
 	SDL_RenderCopy(render, na, NULL, &rect);
@@ -1186,7 +1196,7 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 			cout << znaczY << ":" << przeciwnik[i].posX << endl;
 			if (znaczX == przeciwnik[i].posX && znaczY == przeciwnik[i].posY&&przeciwnik[i].aktywny == true && GetAsyncKeyState(VK_RETURN))
 			{
-				srand(time(NULL));
+				
 				if (rand()%100<70+((int)zrecznosc-(int)(przeciwnik[i].zrecznosc/2)))
 				{
 					przeciwnik[i].obr.x = przeciwnik[i].posX; przeciwnik[i].obr.y = przeciwnik[i].posY+10;
