@@ -156,7 +156,8 @@ int main(int argc, char * args[])
 		if (scena == 0) 
 		{
 		#pragma region Tekstury
-			SDL_Texture *tlo = loadTexture("Grafiki/Tlo.png");
+			SDL_Texture *tlo = loadTexture("Grafiki/g_czern.png");
+			SDL_Texture *g_mgla = loadTexture("Grafiki/g_mgla.png");
 			SDL_Texture *g_gracz = loadTexture("Grafiki/g_postac2.png");
 			SDL_Texture *g_zbroja_r = loadTexture("Grafiki/g_zbroja_r.png");
 			SDL_Texture *g_gnom = loadTexture("Grafiki/gnom.png");
@@ -187,9 +188,9 @@ int main(int argc, char * args[])
 
 		#pragma region Dzwieki
 			Mix_Chunk *m_ciecie = Mix_LoadWAV("Dzwieki/m_ciecie.wav");
-			Mix_Chunk *m_chodzenie = Mix_LoadWAV("Dzwieki/m_chodzenie.wav");
+			Mix_Chunk *m_chodzenie = Mix_LoadWAV("Dzwieki/m_chodzenie2.wav");
 			Mix_Chunk *m_obrazenia = Mix_LoadWAV("Dzwieki/m_obrazenia.wav");
-			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka12.wav");
+			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka21.wav");
 
 		#pragma endregion
 
@@ -203,6 +204,7 @@ int main(int argc, char * args[])
 			UI ui(0, 0, 720, 1280, g_UI, g_kulazycia, g_znacznik_podpalenia);
 			
 			Map testowa_mapa;
+			Map mgla_wojny;
 
 			Gracz gracz(100, 300, 100, 100, true, g_gracz,g_gracz_chodzenie);
 			Przeciwnik gnom1("Gnom", 400, 500, 100,100,10,10,0,2,g_szkielet,ustawianie_rect_spraj(32,20,4));
@@ -253,8 +255,10 @@ int main(int argc, char * args[])
 			*tp = szczala;
 			przedmiksy.push_back(tp);
 
-			testowa_mapa.ukladanie_pokoi(g_podloga, g_sciana);
-
+			testowa_mapa.ukladanie_pokoi(g_podloga, g_sciana,mgla_wojny);
+			
+			
+			mgla_wojny.czarna_mapa(tlo);
 			#pragma endregion
 
 		//Generowanie mapy:
@@ -327,6 +331,8 @@ int main(int argc, char * args[])
 					}
 
 					testowa_mapa.skalowanie(przesuniecieX, przesuniecieY, skala);
+					mgla_wojny.skalowanie(przesuniecieX, przesuniecieY, skala);
+					
 					gracz.skalowanie(przesuniecieX, przesuniecieY, skala);
 					for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
 						(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
@@ -336,7 +342,7 @@ int main(int argc, char * args[])
 					}
 
 				///3.Podnoszeni przedmiotow przez gracza:
-					
+					gracz.usuwanie_mgly(mgla_wojny,g_mgla);
 					gracz.podnoszenie(przedmiksy);
 
 					gracz.pauza(v_przeciwniki);
@@ -344,7 +350,7 @@ int main(int argc, char * args[])
 					gracz.efekty_pasywne();
 
 				///Gracz:
-					gracz.poruszanie(eq, v_przeciwniki,m_chodzenie);
+					gracz.poruszanie(eq, v_przeciwniki,m_chodzenie,testowa_mapa);
 					gracz.efekty_pasywne();
 				///1.1 Gracz atak:6
 					gracz.atak_przycisk();
@@ -366,7 +372,7 @@ int main(int argc, char * args[])
 
 					for (int i = 0; i < v_przeciwniki.size(); i++)
 					{
-						v_przeciwniki[i].poruszanie(render, gracz, s_szkielet, t_szkielet,g_zdrowie);
+						v_przeciwniki[i].poruszanie(render, gracz, s_szkielet, t_szkielet,g_zdrowie,testowa_mapa);
 					}
 					for (int i = 0; i < v_przeciwniki.size(); i++)
 					{
@@ -391,6 +397,8 @@ int main(int argc, char * args[])
 					{
 						v_przeciwniki[i].atak(gracz,m_obrazenia);
 					}
+				///7. Mgla wojny:
+					mgla_wojny.update(render);
 				///0. UI:
 					ui.update(gracz, render,arial);
 					
@@ -429,6 +437,7 @@ int main(int argc, char * args[])
 			SDL_DestroyTexture(g_obrazenia);
 			SDL_DestroyTexture(g_sciana);
 			SDL_DestroyTexture(g_podloga);
+			SDL_DestroyTexture(g_mgla);
 			Mix_FreeChunk(m_ciecie);
 			Mix_FreeChunk(m_chodzenie);
 			Mix_FreeChunk(m_obrazenia);

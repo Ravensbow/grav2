@@ -101,13 +101,14 @@ Przeciwnik::~Przeciwnik()
 
 }
 
-void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t,SDL_Texture *zdrowie)
+void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t,SDL_Texture *zdrowie,Map mapa)
 {
 	
 	if (aktywny == true) {
 		if (tura == true && posX > gracz1.posX&&
 			posX != gracz1.posX + gracz1.szerokosc &&
-			posX != gracz1.posX - gracz1.szerokosc)
+			posX != gracz1.posX - gracz1.szerokosc &&
+			kolizja_przeciwnik(mapa,1)== true)
 		{
 			posX = posX - szerokosc;
 			gracz1.tura = true;
@@ -115,7 +116,8 @@ void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t
 		}
 		else if (tura == true && posX < gracz1.posX &&
 			posX != gracz1.posX + gracz1.szerokosc &&
-			posX != gracz1.posX - gracz1.szerokosc)
+			posX != gracz1.posX - gracz1.szerokosc&&
+			kolizja_przeciwnik(mapa, 2) == true)
 		{
 			posX = posX + szerokosc;
 			gracz1.tura = true;
@@ -123,14 +125,16 @@ void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t
 		}
 		else if (tura == true && posY < gracz1.posY&&
 			posY != gracz1.posY + gracz1.wysokosc &&
-			posY != gracz1.posY - gracz1.wysokosc)
+			posY != gracz1.posY - gracz1.wysokosc &&
+			kolizja_przeciwnik(mapa, 4) == true)
 		{
 			posY = posY + szerokosc;
 			gracz1.tura = true;
 			tura = false;
 		}
 		else if (tura == true && posY > gracz1.posY&& posY != gracz1.posY + gracz1.wysokosc &&
-			posY != gracz1.posY - gracz1.wysokosc)
+			posY != gracz1.posY - gracz1.wysokosc&&
+			kolizja_przeciwnik(mapa, 3) == true)
 		{
 			posY = posY - szerokosc;
 			gracz1.tura = true;
@@ -138,7 +142,47 @@ void Przeciwnik::poruszanie(SDL_Renderer *render , Gracz &gracz1,int &_s,int &_t
 		}
 	}
 }
-
+bool Przeciwnik::kolizja_przeciwnik(Map mapa, int a)
+{
+	bool niemoszna = false;
+	if (a == 1) {
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				if ((*j)->posX == posX - szerokosc && (*j)->posY == posY && (*j)->chodzonosc == true)niemoszna = true;
+			}
+		}
+	}
+	if (a == 2) {
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				if ((*j)->posX == posX + szerokosc && (*j)->posY == posY && (*j)->chodzonosc == true)niemoszna = true;
+			}
+		}
+	}
+	if (a == 3) {
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				if ((*j)->posY == posY - szerokosc && (*j)->posX == posX && (*j)->chodzonosc == true)niemoszna = true;
+			}
+		}
+	}
+	if (a == 4) {
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				if ((*j)->posY == posY + szerokosc && (*j)->posX == posX && (*j)->chodzonosc == true)niemoszna = true;
+			}
+		}
+	}
+	return niemoszna;
+}
 void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 {
 	
@@ -999,7 +1043,7 @@ void Gracz::update(SDL_Renderer *render,int &_s,int &_t,SDL_Texture *zdrowie,TTF
 
 }
 
-bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
+bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, Map mapa, int a){
 	bool gowno=true;
 	if (a == 1)
 	{
@@ -1008,9 +1052,10 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 			if (posX-szerokosc==i->posX&&posY==i->posY&&i->aktywny==true)
 			{
 				gowno = false;
-				break;
+				
 			}
 		}
+		
 	}
 	if (a == 2)
 	{
@@ -1019,7 +1064,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 			if (posX + szerokosc == i->posX&&posY == i->posY&&i->aktywny == true)
 			{
 				gowno = false;
-				break;
+				
 			}
 		}
 	}
@@ -1030,7 +1075,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 			if (posY - szerokosc == i->posY&&posX == i->posX&&i->aktywny == true)
 			{
 				gowno = false;
-				break;
+				
 			}
 		}
 	}
@@ -1041,20 +1086,62 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki,int a) {
 			if (posY+ szerokosc == i->posY&&posX == i->posX&&i->aktywny == true)
 			{
 				gowno = false;
-				break;
+				
 			}
 		}
 	}
 	return gowno;
 }
 
-void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_chodzenie)
+bool Gracz::kolizja_gracz(Map mapa, int a)
+{
+	bool niemoszna = false;
+	if (a == 1) {
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				if ((*j)->posX == posX - szerokosc && (*j)->posY == posY&&(*j)->chodzonosc==true)niemoszna = true;
+			}
+		}
+	}
+	if (a == 2) {
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				if ((*j)->posX ==posX + szerokosc && (*j)->posY == posY && (*j)->chodzonosc == true)niemoszna = true;
+			}
+		}
+	}
+	if (a == 3) {
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				if ((*j)->posY == posY - szerokosc && (*j)->posX == posX && (*j)->chodzonosc == true)niemoszna = true;
+			}
+		}
+	}
+	if (a == 4) {
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				if ((*j)->posY == posY + szerokosc && (*j)->posX == posX && (*j)->chodzonosc == true)niemoszna = true;
+			}
+		}
+	}
+	return niemoszna;
+}
+
+void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_chodzenie, Map mapa)
 {
 	
 		if (GetAsyncKeyState(VK_LEFT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false&&okno_eq.prz_zutu==false)
 		{
 			
-				if (przesuwanie_gracz(przeciwniki,1)==true) {
+				if (przesuwanie_gracz(przeciwniki,  mapa,1)==true&&kolizja_gracz(mapa,1)==true) {
 					
 					posX -= szerokosc;
 					flip = SDL_FLIP_HORIZONTAL;
@@ -1071,7 +1158,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chun
 		if (GetAsyncKeyState(VK_RIGHT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false && okno_eq.prz_zutu == false)
 		{
 			
-				if (przesuwanie_gracz(przeciwniki, 2) == true) {
+				if (przesuwanie_gracz(przeciwniki, mapa, 2) == true && kolizja_gracz(mapa, 2)==true) {
 					posX = posX + szerokosc;
 					flip = SDL_FLIP_NONE;
 					tura = false;
@@ -1086,7 +1173,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chun
 		if (GetAsyncKeyState(VK_UP) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false && okno_eq.prz_zutu == false)
 		{
 			
-				if (przesuwanie_gracz(przeciwniki, 3) == true) {
+				if (przesuwanie_gracz(przeciwniki, mapa, 3) == true && kolizja_gracz(mapa, 3) == true) {
 					posY = posY - szerokosc;
 					tura = false;
 					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
@@ -1100,7 +1187,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chun
 		if (GetAsyncKeyState(VK_DOWN) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false && okno_eq.prz_zutu == false)
 		{
 			
-				if (przesuwanie_gracz(przeciwniki, 4) == true) {
+				if (przesuwanie_gracz(przeciwniki, mapa, 4) == true && kolizja_gracz(mapa, 4) == true) {
 					posY = posY + szerokosc;
 					tura = false;
 					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
@@ -1320,6 +1407,28 @@ void Gracz::skalowanie(double przesuniecieX,double przesuniecieY,double skala)
 	szerokosc *= skala;
 	wysokosc *= skala;
 }
+
+void Gracz::usuwanie_mgly(Map &mapa,SDL_Texture* g_mgla)
+{
+	for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++) {
+		for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++) {
+			if ((posX <= (*j)->posX + 3 * szerokosc&&posY == (*j)->posY) &&
+				(posX >= (*j)->posX - 3 * szerokosc) ||
+				(posY <= (*j)->posY + 3 * szerokosc&&posX == (*j)->posX) &&
+				(posY >= (*j)->posY - 3 * szerokosc) ||
+				(posX <= (*j)->posX + 2 * szerokosc&& posX >= (*j)->posX - 2 * szerokosc&&(posY == (*j)->posY-szerokosc|| posY == (*j)->posY+szerokosc))||
+				(posX <= (*j)->posX +  szerokosc&& posX >= (*j)->posX -  szerokosc && (posY == (*j)->posY - 2*szerokosc || posY == (*j)->posY + 2*szerokosc))) {
+				(*j)->widoczny = false;
+				(*j)->odwiedzony = true;
+			}
+			else if ((*j)->odwiedzony == true) {
+				(*j)->widoczny = true;
+				(*j)->tekstura = g_mgla;
+			}
+		}
+	}
+}
+
 //UI:
 
 UI::UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Texture* g_zy, SDL_Texture* g_z_p)

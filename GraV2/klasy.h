@@ -16,6 +16,7 @@ using namespace std;
 class Okno_eq;
 class Przeciwnik;
 class Przedmiot;
+class Map;
 
 
 
@@ -25,7 +26,7 @@ class Gracz
 	friend class Okno_eq;
 	friend class Przeciwnik;
 	friend class Przedmiot;
-	friend class Mapa;
+	friend class Map;
 	friend class Pokoj1;
 public:
 	//1.Pozycja:
@@ -69,16 +70,18 @@ public:
 	Gracz( double, double, double, double,bool, SDL_Texture*, SDL_Texture*);
 	~Gracz();
 	void update(SDL_Renderer *render,int &_s,int &_t, SDL_Texture *zdrowie, TTF_Font *arial, SDL_Texture *g_obrazenia);
-	void poruszanie(Okno_eq okno_eq, vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_ciecie);
+	void poruszanie(Okno_eq okno_eq, vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_ciecie, Map mapa);
 	void koniec(vector<Przeciwnik> &przeciwnik);
 	void podnoszenie(vector<Przedmiot*> &przedmiot);
 	void atak_przycisk();
 	void atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render, Mix_Chunk *m_chodzenie);
 	void pauza(vector<Przeciwnik> &przeciwnik);
-	bool przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, int a);
+	bool przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, Map mapa, int a);
 	void efekty_pasywne();
 	void animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial);
 	void skalowanie(double przesuniecieX, double przesuniecieY,double skala);
+	bool kolizja_gracz(Map mapa, int a);
+	void usuwanie_mgly(Map &mapa, SDL_Texture* g_mgla);
 };
 
 class Przeciwnik
@@ -118,7 +121,8 @@ public:
 
 	Przeciwnik(string,double, double, double, double,double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
 	~Przeciwnik();
-	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, SDL_Texture *zdrowie);
+	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, SDL_Texture *zdrowie, Map mapa);
+	bool kolizja_przeciwnik(Map mapa, int a);
 	void atak(Gracz &gracz, Mix_Chunk *m_obrazenia);
 	void update(SDL_Renderer *render, int &_s, int &_t,SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
 	void potion(char rodzaj);
@@ -237,6 +241,8 @@ public:
 	double wysokosc;
 	bool chodzonosc;
 	char rodzaj;
+	bool widoczny = true;
+	bool odwiedzony = false;
 	SDL_Texture *tekstura;
 
 	Klocek() {}
@@ -258,7 +264,7 @@ public:
 		rect.y = posY;
 		rect.h = wysokosc;
 		rect.w = szerokosc;
-		SDL_RenderCopy(render, tekstura, NULL, &rect);
+		if(widoczny==true)SDL_RenderCopy(render, tekstura, NULL, &rect);
 	}
 	void skalowanie(double przesuniecieX, double przesuniecieY, double skala)
 	{
@@ -326,7 +332,7 @@ public:
 			if (uklad[i] == '>')
 			{
 				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
-				kloc.chodzonosc = true;
+				kloc.chodzonosc = false;
 				kloc.rodzaj = '>';
 				kanalright = kloc;
 				tp = new Klocek;
@@ -338,7 +344,7 @@ public:
 			if (uklad[i] == '<')
 			{
 				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
-				kloc.chodzonosc = true;
+				kloc.chodzonosc = false;
 				kloc.rodzaj = '<';
 				kanalleft = kloc;
 				tp = new Klocek;
@@ -350,7 +356,7 @@ public:
 			if (uklad[i] == ',')
 			{
 				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
-				kloc.chodzonosc = true;
+				kloc.chodzonosc = false;
 				kloc.rodzaj = ',';
 				kanaldown = kloc;
 				tp = new Klocek;
@@ -362,7 +368,7 @@ public:
 			if (uklad[i] == '`')
 			{
 				Klocek kloc(0 + k * 100, 0 + j * 100, sciana);
-				kloc.chodzonosc = true;
+				kloc.chodzonosc = false;
 				kloc.rodzaj = '`';
 				kanalup = kloc;
 				tp = new Klocek;
@@ -507,6 +513,7 @@ public:
 
 class Map
 {
+	friend class Gracz;
 public:
 	vector<Room*> pokoje;
 	Map() {};
@@ -519,7 +526,7 @@ public:
 		a = rand() % 4;
 		if (a == 0)
 		{
-			pom = "CCCC`CCC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHCCCCCCCCCCCC/<HHHHHHHHHHHHHHHHH>/CHHHHHHHHHHHHHHHHHC/CHHHHHHHHHHHHHHHHHC/C,CCCCCCC,CCCCCCC,C";
+			pom = "CCCC`CCC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHCCCCCCCCCCCC/<HHHHHHHHHHHHHHHHH>/CHHHHHHHHHHHHHHHHHC/CHHHHHHHHHHHHHHHHHC/C,CCCCCCC,CCCCCCC,C";
 		}
 		if (a == 1)
 		{
@@ -536,9 +543,10 @@ public:
 		return pom;
 	}
 
-	void ukladanie_pokoi(SDL_Texture *podloga, SDL_Texture *sciana)
+	void ukladanie_pokoi(SDL_Texture *podloga, SDL_Texture *sciana,Map &mapa)
 	{
 		Room* tp;
+		Room* tp2;
 		int j = 0;
 		int k = 0;
 		int przesuniecieX = 0;
@@ -553,8 +561,9 @@ public:
 				przesuniecieX = 0;
 				przesuniecieY = najwieksza_wysokosc;
 			}
-
-			Room pokoj(rodzaje_pomieszczen(), podloga, sciana);
+			string rodz = rodzaje_pomieszczen();
+			Room pokoj(rodz, podloga, sciana);
+			Room pokoj2(rodz, podloga, sciana);
 
 			if (pokoj.wysokosc > najwieksza_wysokosc)
 			{
@@ -562,10 +571,14 @@ public:
 			}
 
 			pokoj.przesuniecie(przesuniecieX * 100 + 400*k, przesuniecieY * 100*j + 400*j);
+			pokoj2.przesuniecie(przesuniecieX * 100 + 400 * k, przesuniecieY * 100 * j + 400 * j);
 
 			tp = new Room;
+			tp2 = new Room;
 			*tp = pokoj;
+			*tp2 = pokoj2;
 			pokoje.push_back(tp);
+			mapa.pokoje.push_back(tp2);
 
 			
 			przesuniecieX += pokoj.szerokosc;
@@ -576,21 +589,33 @@ public:
 		for (auto i = pokoje.begin(); i != pokoje.end(); i++) {
 			(*i)->kanalowanie();
 		}
-		
-		for (int i = 0; i < 9; i++) {
-			for (int j = 0; j < 9; j++) {
-				if(j!=i)pokoje[i]->dodawanie_sciezek(pokoje[j], podloga);
-			 }
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++) {
+			(*i)->kanalowanie();
 		}
 		
-		/*pokoje[0]->dodawanie_sciezek(pokoje[3], podloga); pokoje[0]->dodawanie_sciezek(pokoje[1], podloga);
+		//for (int i = 0; i < 9; i++) {
+		//	for (int j = 0; j < 9; j++) {
+		//		if(j!=i)pokoje[i]->dodawanie_sciezek(pokoje[j], podloga);
+		//	 }
+		//}
+		
+		pokoje[0]->dodawanie_sciezek(pokoje[3], podloga); pokoje[0]->dodawanie_sciezek(pokoje[1], podloga);
 		pokoje[1]->dodawanie_sciezek(pokoje[2], podloga); pokoje[1]->dodawanie_sciezek(pokoje[4], podloga); pokoje[1]->dodawanie_sciezek(pokoje[5], podloga);
 		pokoje[2]->dodawanie_sciezek(pokoje[5], podloga);
 		pokoje[3]->dodawanie_sciezek(pokoje[4], podloga); pokoje[3]->dodawanie_sciezek(pokoje[6], podloga);
 		pokoje[4]->dodawanie_sciezek(pokoje[5], podloga); pokoje[4]->dodawanie_sciezek(pokoje[7], podloga);
 		pokoje[5]->dodawanie_sciezek(pokoje[8], podloga);
 		pokoje[6]->dodawanie_sciezek(pokoje[7], podloga);
-		pokoje[7]->dodawanie_sciezek(pokoje[8], podloga);*/
+		pokoje[7]->dodawanie_sciezek(pokoje[8], podloga);
+
+		mapa.pokoje[0]->dodawanie_sciezek(mapa.pokoje[3], podloga); mapa.pokoje[0]->dodawanie_sciezek(mapa.pokoje[1], podloga);
+		mapa.pokoje[1]->dodawanie_sciezek(mapa.pokoje[2], podloga); mapa.pokoje[1]->dodawanie_sciezek(mapa.pokoje[4], podloga); mapa.pokoje[1]->dodawanie_sciezek(mapa.pokoje[5], podloga);
+		mapa.pokoje[2]->dodawanie_sciezek(mapa.pokoje[5], podloga);
+		mapa.pokoje[3]->dodawanie_sciezek(mapa.pokoje[4], podloga); mapa.pokoje[3]->dodawanie_sciezek(mapa.pokoje[6], podloga);
+		mapa.pokoje[4]->dodawanie_sciezek(mapa.pokoje[5], podloga); mapa.pokoje[4]->dodawanie_sciezek(mapa.pokoje[7], podloga);
+		mapa.pokoje[5]->dodawanie_sciezek(mapa.pokoje[8], podloga);
+		mapa.pokoje[6]->dodawanie_sciezek(mapa.pokoje[7], podloga);
+		mapa.pokoje[7]->dodawanie_sciezek(mapa.pokoje[8], podloga);
 	}
 	
 	void update(SDL_Renderer *render)
@@ -607,6 +632,23 @@ public:
 		for (auto itr = pokoje.begin(); itr != pokoje.end(); itr++) {
 			(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
 		}
+	}
+
+	void czarna_mapa(SDL_Texture* czern)
+	{
+		for (auto i = pokoje.begin(); i != pokoje.end(); i++)
+		{
+			for (auto j = (*i)->kafelki.begin(); j != (*i)->kafelki.end(); j++)
+			{
+				(*j)->tekstura = czern;
+			}
+		}
+	}
+
+	void kopiowanie(Map &mapa)
+	{
+		
+		
 	}
 };
 
