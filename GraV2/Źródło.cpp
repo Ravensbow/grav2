@@ -379,7 +379,7 @@ int main(int argc, char * args[])
 						v_przeciwniki[i].update(render,s_szkielet, t_szkielet, g_zdrowie,g_ciecie,arial);
 						
 					}
-					eq.zucanie(gracz, v_przeciwniki, render,przedmiksy);
+					eq.zucanie(gracz, v_przeciwniki, render,przedmiksy,testowa_mapa);
 				///4. Przedmiot:
 					for (auto i = przedmiksy.begin(); i != przedmiksy.end(); i++)
 					{

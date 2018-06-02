@@ -867,7 +867,7 @@ void Okno_eq::sterowanie(Gracz gracz)
 	
 }
 
-void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render, vector<Przedmiot*> &przedmiksy)
+void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render, vector<Przedmiot*> &przedmiksy,Map mapa)
 {
 	if (prz_zutu==true)
 	{
@@ -902,11 +902,12 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 		if (prz_lotu == -1)polozenie_zutuY += 10 ;
 		if (prz_lotu == 2)polozenie_zutuX += 10 ;
 		if (prz_lotu == -2)polozenie_zutuX -= 10;
+		
 		for (int i = 0; i < przeciwniki.size(); i++)
 		{
 			if ( przeciwniki[i].posX == polozenie_zutuX && przeciwniki[i].posY == polozenie_zutuY && przeciwniki[i].aktywny == true)
 			{
-				prz_lotu = 0;
+				
 				prz_zutu = false;
 
 				for (auto itr = gracz.ekwipunek.begin(); itr != gracz.ekwipunek.end(); itr++)
@@ -917,16 +918,83 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 						przeciwniki[i].zycie -= (*itr)->obrazenia;
 						przeciwniki[i].potion((*itr)->rodzaj);
 						if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
-						
+						prz_lotu = 0;
 						break;
 					}
 				} //usuwanie po trafieniu
 				
 			}
 		}
+
+		for (auto i = mapa.pokoje.begin(); i != mapa.pokoje.end(); i++)
+		{
+			for(auto j=(*i)->kafelki.begin();j!=(*i)->kafelki.end();j++)
+			{ 
+				if ((*j)->posX == polozenie_zutuX && (*j)->posY == polozenie_zutuY && (*j)->chodzonosc == false)
+				{
+					
+					prz_zutu = false;
+
+					for (auto itr = gracz.ekwipunek.begin(); itr != gracz.ekwipunek.end(); itr++)
+					{
+						std::cout << prz_lotu << std::endl;
+						if (*itr == zutka&&prz_lotu==1)
+						{
+							(*itr)->amunicja--;
+							Potion elo((*itr)->nazwa, polozenie_zutuX, polozenie_zutuY+ (*itr)->szerokosc, (*itr)->szerokosc, (*itr)->wysokosc, (*itr)->tekstura, true, (*itr)->rodzaj, 1, (*itr)->obrazenia);
+							Przedmiot* tp;
+							tp = new Potion;
+							*tp = elo;
+							przedmiksy.push_back(tp);
+							if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
+							prz_lotu = 0;
+							break;
+						}
+						if (*itr == zutka && prz_lotu == -1)
+						{
+							(*itr)->amunicja--;
+							Potion elo((*itr)->nazwa, polozenie_zutuX, polozenie_zutuY - (*itr)->szerokosc, (*itr)->szerokosc, (*itr)->wysokosc, (*itr)->tekstura, true, (*itr)->rodzaj, 1, (*itr)->obrazenia);
+							Przedmiot* tp;
+							tp = new Potion;
+							*tp = elo;
+							przedmiksy.push_back(tp);
+							if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
+							prz_lotu = 0;
+							break;
+						}
+						if (*itr == zutka && prz_lotu == 2)
+						{
+							(*itr)->amunicja--;
+							Potion elo((*itr)->nazwa, polozenie_zutuX - (*itr)->szerokosc, polozenie_zutuY , (*itr)->szerokosc, (*itr)->wysokosc, (*itr)->tekstura, true, (*itr)->rodzaj, 1, (*itr)->obrazenia);
+							Przedmiot* tp;
+							tp = new Potion;
+							*tp = elo;
+							przedmiksy.push_back(tp);
+							if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
+							prz_lotu = 0;
+							break;
+						}
+						if (*itr == zutka && prz_lotu == -2)
+						{
+							(*itr)->amunicja--;
+							Potion elo((*itr)->nazwa, polozenie_zutuX + (*itr)->szerokosc, polozenie_zutuY , (*itr)->szerokosc, (*itr)->wysokosc, (*itr)->tekstura, true, (*itr)->rodzaj, 1, (*itr)->obrazenia);
+							Przedmiot* tp;
+							tp = new Potion;
+							*tp = elo;
+							przedmiksy.push_back(tp);
+							if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
+							prz_lotu = 0;
+							break;
+						}
+					} 
+					//usuwanie po trafieniu
+				}
+			}
+		}
+
 		if ((polozenie_zutuX == gracz.posX+(5*gracz.szerokosc))||( polozenie_zutuX == gracz.posX-(5 * gracz.szerokosc)  ) || (polozenie_zutuY == gracz.posY - (5 * gracz.szerokosc)) || (polozenie_zutuY == gracz.posY + (5 * gracz.szerokosc)))
 		{
-			prz_lotu = 0;
+			
 			prz_zutu = false;
 			for (auto itr = gracz.ekwipunek.begin(); itr != gracz.ekwipunek.end(); itr++)
 			{
@@ -942,6 +1010,7 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 					przedmiksy.push_back(tp);
 					
 					if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
+					prz_lotu = 0;
 					break;
 				}
 			}
