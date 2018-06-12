@@ -74,6 +74,13 @@ int taimer(Uint32 czas, int liczba_klatek, Uint32 odswierzanie)
 	return a;
 }
 
+string zmiana_nazwy(int nr_podziemia)
+{
+	string a;
+	
+	return a;
+}
+
 
 
 //Przeciwnik:
@@ -337,6 +344,55 @@ void Przeciwnik::skalowanie(double przesuniecieX, double przesuniecieY, double s
 	wysokosc *= skala;
 }
 
+//Szczury:
+
+Szczur::Szczur(string imie, double px, double py, double wy, double sze, double max, double zre, double inte, double obra, SDL_Texture *przec, vector<SDL_Rect> spr)
+{
+	aktywny = true;
+	nazwa = imie;
+	posX = px;
+	posY = py;
+	szerokosc = sze;
+	wysokosc = wy;
+	tekstura = przec;
+
+	zrecznosc = zre;
+	inteligencja = inte;
+	spreje = spr;
+	obrazenia = obra;
+	zycie = max;
+	max_zycie = max;
+}
+
+void Szczur::update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial)
+{
+	if (aktywny == true)
+	{
+		if (zycie <= 0)aktywny = false;
+
+		SDL_Rect rect;
+
+		rect.x = posX;
+		rect.y = posY; 
+		rect.w = wysokosc;
+		rect.h = szerokosc;
+
+		obr.w = szerokosc / 2;
+		obr.h = wysokosc / 2;
+
+		SDL_RenderCopy(render, tekstura, &spreje[taimer_animacji(_t, _s, 3, 20)], &rect);
+
+		//Animacja: 
+		animacje_ataku(render, ciecie, arial);
+		//Pasek Zdrowia:	
+		rect.y -= 10;
+		rect.h = wysokosc / 10;
+		rect.w = szerokosc * ((double)zycie / (double)max_zycie);
+		SDL_RenderCopy(render, zdrowie, NULL, &rect);
+
+	}
+}
+
 //Przedmiot:
 
 Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy,double obraz,double ochr, SDL_Texture *teks,SDL_Texture *teks_r,bool akt,char rodz)
@@ -507,7 +563,7 @@ Przedmiot::~Przedmiot()
 	 wysokosc *= skala;
  }
 
-//Potion:
+ //Potion:
 
 Potion::Potion(string imie, double px, double py, double sze, double wy, SDL_Texture *teks, bool akt, char rodz,int amo,double obra)
 {
@@ -1428,8 +1484,8 @@ void Gracz::animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TT
 	rect.w = wysokosc;
 	rect.h = szerokosc;
 
-	obr.w = 60;
-	obr.h = 100;
+	obr.w = 0.6*szerokosc;
+	obr.h = szerokosc;
 
 
 	SDL_Texture *na = napis(255, 50, 50, arial, render, to_string(przedchwila_zadane_obrazenia));
@@ -1511,7 +1567,7 @@ UI::UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Tex
 	g_znacznik_podpalenia = g_z_p;
 }
 
-void UI::update(Gracz gracz,SDL_Renderer* render, TTF_Font*arial)
+void UI::update(Gracz gracz,SDL_Renderer* render, TTF_Font*arial,int nr_pietra,string nazwa_pietra)
 {
 	SDL_Rect rect;
 	SDL_Rect od;
@@ -1563,6 +1619,24 @@ void UI::update(Gracz gracz,SDL_Renderer* render, TTF_Font*arial)
 
 		SDL_RenderCopy(render, g_znacznik_podpalenia, NULL, &rect);
 	}
+
+	rect.x = 520;
+	rect.y = 35;
+	rect.w = nazwa_pietra.size()*20;
+	rect.h = 30;
+	
+	na = napis(255, 255, 255, arial, render, nazwa_pietra);
+
+	SDL_RenderCopy(render, na, NULL, &rect);
+
+	rect.x = 520+20+(nazwa_pietra.size()*30);
+	rect.y = 35;
+	rect.w = to_string(nr_pietra).size() * 20;
+	rect.h = 30;
+
+	na = napis(255, 255, 255, arial, render, to_string(nr_pietra));
+
+	SDL_RenderCopy(render, na, NULL, &rect);
 
 	SDL_DestroyTexture(na);
 	

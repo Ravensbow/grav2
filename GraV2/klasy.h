@@ -6,6 +6,7 @@
 #include<iostream>
 #include<vector>
 #include<sstream>
+#include<typeinfo>
 #include<time.h>
 
 
@@ -17,6 +18,7 @@ class Okno_eq;
 class Przeciwnik;
 class Przedmiot;
 class Map;
+
 
 
 
@@ -119,15 +121,24 @@ public:
 	bool podpalenie = false;
 	bool zamrozenie = false;
 
+	Przeciwnik(){}
 	Przeciwnik(string,double, double, double, double,double,double,double,double,SDL_Texture*, vector<SDL_Rect> spreje);
 	~Przeciwnik();
 	void poruszanie(SDL_Renderer *render,Gracz &gracz1,int &_s , int &_t, SDL_Texture *zdrowie, Map mapa);
 	bool kolizja_przeciwnik(Map mapa, int a);
 	void atak(Gracz &gracz, Mix_Chunk *m_obrazenia);
-	void update(SDL_Renderer *render, int &_s, int &_t,SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
+	virtual void update(SDL_Renderer *render, int &_s, int &_t,SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
 	void potion(char rodzaj);
 	void animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial);
 	void skalowanie(double przesuniecieX, double przesuniecieY, double skala);
+};
+
+class Szczur : public Przeciwnik
+{
+public:
+	Szczur() {}
+	Szczur(string imie, double px, double py, double wy, double sze, double max, double zre, double inte, double obra, SDL_Texture *przec, vector<SDL_Rect> spr);
+	void update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
 };
 
 class Przedmiot
@@ -167,6 +178,7 @@ public:
 	Przedmiot();
 	~Przedmiot();
 	virtual bool uzycie(Gracz &gracz) { return false; }
+	virtual char rodzaj_kalsy() { return 'I'; }
 	virtual void update( SDL_Renderer *render);
 	virtual void okno_informacji(SDL_Renderer* render, SDL_Texture *tekstura, TTF_Font *font, double px, double py);
 	void skalowanie(double przesuniecieX, double przesuniecieY, double skala);
@@ -179,6 +191,7 @@ public:
 	Potion(){}
 	Potion(string, double, double, double, double, SDL_Texture*, bool, char,int,double);
 	bool uzycie(Gracz &gracz);
+	char rodzaj_kalsy() { return 'O'; }
 	void update(SDL_Renderer *render);
 };
 
@@ -225,11 +238,10 @@ public:
 
 	UI(double px, double py, double wys, double szer, SDL_Texture* g_in, SDL_Texture* g_zy, SDL_Texture* g_z_p);
 
-	void update(Gracz gracz, SDL_Renderer* render, TTF_Font*arial);
+	void update(Gracz gracz, SDL_Renderer* render, TTF_Font*arial, int nr_pietra, string nazwa_pietra);
 
 
 };
-
 
 class Klocek
 {
@@ -255,7 +267,7 @@ public:
 		szerokosc = 100.0;
 		rodzaj = NULL;
 	}
-	void update(SDL_Renderer *render)
+	virtual void update(SDL_Renderer *render,Gracz gracz, bool &zmiana_lvl)
 	{
 		
 
@@ -278,6 +290,34 @@ public:
 	}
 };
 
+class Zejscie : public Klocek
+{
+	friend class Map;
+
+public: 
+	Zejscie() {}
+	Zejscie(double px, double py, SDL_Texture *teks)
+	{
+		posX = px;
+		posY = py;
+		widoczny = true;
+		tekstura = teks;
+		wysokosc = 100.0;
+		szerokosc = 100.0;
+		rodzaj = NULL;
+	}
+	void update(SDL_Renderer *render, Gracz gracz, bool &zmiana_lvl)
+	{
+		SDL_Rect rect;
+		rect.x = posX;
+		rect.y = posY;
+		rect.h = wysokosc;
+		rect.w = szerokosc;
+		if (widoczny == true)SDL_RenderCopy(render, tekstura, NULL, &rect);
+		if (gracz.posX == posX && gracz.posY == posY) zmiana_lvl = true;
+	}
+};
+
 class Room
 {
 	friend class Map;
@@ -290,12 +330,12 @@ public:
 
 	Room() {}
 
-	Room(string uk, SDL_Texture *podloga, SDL_Texture *sciana) {
+	Room(string uk, SDL_Texture *podloga, SDL_Texture *sciana,bool &zejscie) {
 		uklad = uk;
-		ukladanie_kafelkow(podloga, sciana);
+		ukladanie_kafelkow(podloga, sciana,zejscie);
 	}
 
-	void ukladanie_kafelkow(SDL_Texture *podloga, SDL_Texture *sciana)
+	void ukladanie_kafelkow(SDL_Texture *podloga, SDL_Texture *sciana,bool &zejscie)
 	{
 		int j = 0;
 		int k = 0;
@@ -394,11 +434,11 @@ public:
 		}
 	}
 
-	void update(SDL_Renderer *render)
+	void update(SDL_Renderer *render, Gracz gracz, bool &zmiana_lvl)
 	{
 		for (auto itr = kafelki.begin(); itr != kafelki.end(); itr++)
 		{
-			(*itr)->update(render);
+			(*itr)->update(render,gracz,zmiana_lvl);
 		}
 	}
 
@@ -518,6 +558,7 @@ public:
 	vector<Room*> pokoje;
 	Map() {};
 	~Map() {};
+	bool zejscie = true;
 	
 	string rodzaje_pomieszczen()
 	{
@@ -562,8 +603,8 @@ public:
 				przesuniecieY = najwieksza_wysokosc;
 			}
 			string rodz = rodzaje_pomieszczen();
-			Room pokoj(rodz, podloga, sciana);
-			Room pokoj2(rodz, podloga, sciana);
+			Room pokoj(rodz, podloga, sciana,zejscie);
+			Room pokoj2(rodz, podloga, sciana,zejscie);
 
 			if (pokoj.wysokosc > najwieksza_wysokosc)
 			{
@@ -618,12 +659,12 @@ public:
 		mapa.pokoje[7]->dodawanie_sciezek(mapa.pokoje[8], podloga);
 	}
 	
-	void update(SDL_Renderer *render)
+	void update(SDL_Renderer *render, Gracz gracz, bool &zmiana_lvl)
 	{
 		
 		for (int i=8;i>=0;i--)
 		{
-			pokoje[i]->update(render);
+			pokoje[i]->update(render,gracz,zmiana_lvl);
 		}
 	}
 	
@@ -645,15 +686,77 @@ public:
 		}
 	}
 
-	void kopiowanie(Map &mapa)
+	void resp_item(vector<Przedmiot*> szablon_przedmiotow, vector<Przedmiot*> &przedmioty)
 	{
+		for (auto i = pokoje.begin(); i != pokoje.end(); i++) {
+			if (rand() % 10 > 4)
+			{
+				Przedmiot* tp;
+				
+				Przedmiot *itr= szablon_przedmiotow[int((rand() % szablon_przedmiotow.size()))];
+				cout << itr->rodzaj_kalsy() << endl;
+				if (itr->rodzaj_kalsy() == 'O') {
+					cout << "elo" << endl;
+					Potion elo(itr->nazwa, (*i)->kafelki[int((*i)->kafelki.size()/2)]->posX, (*i)->kafelki[int((*i)->kafelki.size() / 2)]->posY, itr->szerokosc, itr->wysokosc, itr->tekstura, true, itr->rodzaj, 1, itr->obrazenia);
+					tp = new Potion;
+					*tp = elo;
+					przedmioty.push_back(tp);
+				}
+				if (itr->rodzaj_kalsy() == 'I') {
+					cout << "elo" << endl;
+					Przedmiot elo(itr->nazwa, (*i)->kafelki[int((*i)->kafelki.size() / 2)]->posX, (*i)->kafelki[int((*i)->kafelki.size() / 2)]->posY, itr->szerokosc, itr->wysokosc, itr->obrazenia, itr->ochrona,itr->tekstura,itr->tekstura_r, true, itr->rodzaj);
+					tp = new Potion;
+					*tp = elo;
+					przedmioty.push_back(tp);
+				}
+			}
+		}
+		cout<<przedmioty.size()<<endl;
+	}
+
+	void dodanie_zejscia(SDL_Texture *tekstura, SDL_Texture *g_schody,Gracz gracz)
+	{
+		int a = rand() % pokoje.size();
 		
-		
+		do
+		{
+			int b = rand() % pokoje[a]->kafelki.size();
+			if (pokoje[a]->kafelki[b]->chodzonosc == true)
+			{
+				cout << pokoje[a]->kafelki.size() << endl;
+				Klocek* tp;
+				tp = new Zejscie;
+				Zejscie elo(pokoje[a]->kafelki[b]->posX, pokoje[a]->kafelki[b]->posY, tekstura);
+				elo.chodzonosc = true;
+				*tp = elo;
+				pokoje[a]->kafelki.erase(pokoje[a]->kafelki.begin()+b);
+				pokoje[a]->kafelki.push_back(tp);
+
+				cout << pokoje[a]->kafelki.size() << endl;
+				zejscie = true;
+			}
+			
+		} while (zejscie == false);
+		Klocek* tp;
+		tp = new Klocek;
+		Klocek elo(gracz.posX, gracz.posY, g_schody);
+		elo.chodzonosc = true;
+		*tp = elo;
+		pokoje[0]->kafelki.push_back(tp);
+	}
+
+	void clear()
+	{
+		pokoje.clear();
 	}
 };
+
+
+
 
 //Funkcje:
 
 vector<SDL_Rect> ustawianie_rect_spraj(int wys, int szer, int kolumny);
 int taimer_animacji(int &_t, int &_s,int liczba_klatek, int odswierzanie);
 int taimer(Uint32 czas, int liczba_klatek, Uint32 odswierzanie);
+string zmiana_nazwy(int nr_podziemia);

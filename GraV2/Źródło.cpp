@@ -107,7 +107,9 @@ string gen_nazw(char rodzaj)
 #pragma region Zmienne globalne
 int scena = 0;
 int klatka = 0;
-bool zmiana_levelu = true;
+bool zmiana_levelu = false;
+int nr_pietra = 1;
+string nazwa_pietra = "KANALY";
 double przesuniecieX=0;
 double przesuniecieY=0;
 double skala=1;
@@ -182,6 +184,8 @@ int main(int argc, char * args[])
 			SDL_Texture *g_obrazenia = loadTexture("Grafiki/g_obrazenia.png");
 			SDL_Texture *g_podloga = loadTexture("Grafiki/g_podloga2.png");
 			SDL_Texture *g_sciana = loadTexture("Grafiki/g_sciana2.png");
+			SDL_Texture *g_zejscie = loadTexture("Grafiki/g_zejscie.png");
+			SDL_Texture *g_schody = loadTexture("Grafiki/g_schody.png");
 		//Czcionki:
 			TTF_Font*arial = TTF_OpenFont("sredniowiecze.ttf", 30);
 			#pragma endregion
@@ -196,7 +200,7 @@ int main(int argc, char * args[])
 
 		#pragma region Zmienne
 			///wektory
-			vector<Przedmiot> v_przedmioty;
+			vector<Przedmiot*> v_przedmioty;
 			vector<Przedmiot*> przedmiksy;
 			vector<Przeciwnik> v_przeciwniki;
 			///obiekty
@@ -219,60 +223,77 @@ int main(int argc, char * args[])
 			Potion zdrowko("Potion Zdrowia", 100, 200, 100, 100, g_potion_zdrowia, true, 'u',0,0);
 			Potion szczala("Rzutka", 200, 200, 100, 100, g_zutka, true, 'q', 5, 10);
 			Okno_eq eq(60, 10, 700, 600, false,g_statystyki);
-			///push back test
-			//przedmioty
-			v_przedmioty.push_back(miecz1);
-			v_przedmioty.push_back(miecz2);
-			v_przedmioty.push_back(miecz3);
-			v_przedmioty.push_back(miecz4);
-			v_przedmioty.push_back(miecz5);
+			
 			//przeciwniki
 			v_przeciwniki.push_back(gnom1);
 			v_przeciwniki.push_back(gnom2);
+			
 			Przedmiot* tp;
+	
 			tp = new Przedmiot;
 			*tp = miecz1;
-			przedmiksy.push_back(tp);
+			v_przedmioty.push_back(tp);
 			tp = new Przedmiot;
 			*tp = miecz2;
-			przedmiksy.push_back(tp);
+			v_przedmioty.push_back(tp);
 			tp = new Przedmiot;
 			*tp = miecz3;
-			przedmiksy.push_back(tp);
+			v_przedmioty.push_back(tp);
 			tp = new Przedmiot;
 			*tp = miecz4;
-			przedmiksy.push_back(tp);
+			v_przedmioty.push_back(tp);
 			tp = new Przedmiot;
 			*tp = miecz5;
-			przedmiksy.push_back(tp);
+			v_przedmioty.push_back(tp);
 			tp = new Potion;
 			*tp = aaa;
-			przedmiksy.push_back(tp);
+			v_przedmioty.push_back(tp);
 			tp = new Potion;
 			*tp = zdrowko;
-			przedmiksy.push_back(tp);
+			v_przedmioty.push_back(tp);
 			tp = new Potion;
 			*tp = szczala;
-			przedmiksy.push_back(tp);
+			v_przedmioty.push_back(tp);
 
 			testowa_mapa.ukladanie_pokoi(g_podloga, g_sciana,mgla_wojny);
-			
+			testowa_mapa.dodanie_zejscia(g_zejscie,g_schody,gracz);
+			testowa_mapa.resp_item(v_przedmioty, przedmiksy);
 			
 			mgla_wojny.czarna_mapa(tlo);
 			#pragma endregion
 
-		//Generowanie mapy:
-			if (zmiana_levelu == true)
-			{
-				
-				zmiana_levelu = false;
-				
-			}
+		
 
 			while (scena == 0) 
 			{
 				fps.start();
 			//ZDARZENIA:
+			//Generowanie mapy:
+				if (zmiana_levelu == true)
+				{
+					gracz.posX = 100;
+					gracz.posY = 300;
+					gracz.wysokosc = 100;
+					gracz.szerokosc = 100;
+
+					testowa_mapa.clear();
+					mgla_wojny.clear();
+					przedmiksy.clear();
+
+					testowa_mapa.ukladanie_pokoi(g_podloga, g_sciana, mgla_wojny);
+					testowa_mapa.dodanie_zejscia(g_zejscie, g_schody, gracz);
+					testowa_mapa.resp_item(v_przedmioty, przedmiksy);
+					mgla_wojny.czarna_mapa(tlo);
+
+					
+
+					nr_pietra++;
+
+					
+
+					zmiana_levelu = false;
+
+				}
 				///0. Muzyka:
 				if (Mix_PlayingMusic() == 0)
 				{
@@ -341,6 +362,64 @@ int main(int argc, char * args[])
 						itr->skalowanie(przesuniecieX, przesuniecieY, skala);
 					}
 
+				///Gracz przy krawedzi, przesuwanie kamery:
+					if (gracz.posX >1280 -gracz.szerokosc * 2)
+					{
+						testowa_mapa.skalowanie(-200,0, 1);
+						mgla_wojny.skalowanie(-200, 0, 1);
+
+						gracz.skalowanie(-200, 0,1);
+						for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+							(*itr)->skalowanie(-200, 0, skala);
+						}
+						for (auto itr = v_przeciwniki.begin(); itr != v_przeciwniki.end(); itr++) {
+							itr->skalowanie(-200,0, skala);
+						}
+					}
+					
+					if (gracz.posX < gracz.szerokosc*2)
+					{
+						cout << gracz.posX << endl;
+						testowa_mapa.skalowanie(200, 0, 1);
+						mgla_wojny.skalowanie(200, 0, 1);
+
+						gracz.skalowanie(200, 0, 1);
+						for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+							(*itr)->skalowanie(200, 0, skala);
+						}
+						for (auto itr = v_przeciwniki.begin(); itr != v_przeciwniki.end(); itr++) {
+							itr->skalowanie(200, 0, skala);
+						}
+					}
+					if (gracz.posY >720 - gracz.szerokosc * 2)
+					{
+						testowa_mapa.skalowanie(0, -200, 1);
+						mgla_wojny.skalowanie(0, -200, 1);
+
+						gracz.skalowanie(0, -200, 1);
+						for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+							(*itr)->skalowanie(0, -200, skala);
+						}
+						for (auto itr = v_przeciwniki.begin(); itr != v_przeciwniki.end(); itr++) {
+							itr->skalowanie(0, -200, skala);
+						}
+					}
+					if (gracz.posY < gracz.szerokosc * 2)
+					{
+						cout << "elo" << endl;
+						testowa_mapa.skalowanie(0, 200, 1);
+						mgla_wojny.skalowanie(0, 200, 1);
+
+						gracz.skalowanie(0, 200, 1);
+						for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+							(*itr)->skalowanie(0, 200, skala);
+						}
+						for (auto itr = v_przeciwniki.begin(); itr != v_przeciwniki.end(); itr++) {
+							itr->skalowanie(0, 200, skala);
+						}
+					}
+
+
 				///3.Podnoszeni przedmiotow przez gracza:
 					gracz.usuwanie_mgly(mgla_wojny,g_mgla);
 					gracz.podnoszenie(przedmiksy);
@@ -363,7 +442,7 @@ int main(int argc, char * args[])
 				
 				///1. Tlo:
 				
-					testowa_mapa.update(render);
+					testowa_mapa.update(render,gracz,zmiana_levelu);
 
 				///2. Gracz:
 					gracz.update(render,s_postac,t_postac,g_zdrowie,arial,g_obrazenia);
@@ -398,9 +477,9 @@ int main(int argc, char * args[])
 						v_przeciwniki[i].atak(gracz,m_obrazenia);
 					}
 				///7. Mgla wojny:
-					mgla_wojny.update(render);
+					mgla_wojny.update(render,gracz,zmiana_levelu);
 				///0. UI:
-					ui.update(gracz, render,arial);
+					ui.update(gracz, render,arial,nr_pietra,nazwa_pietra);
 					
 				///5. Okno ekwipunku:
 					eq.update(g_okno_ekwipunku, g_znacznik, g_okno_przedmiotu, arial, render, gracz);
@@ -438,6 +517,8 @@ int main(int argc, char * args[])
 			SDL_DestroyTexture(g_sciana);
 			SDL_DestroyTexture(g_podloga);
 			SDL_DestroyTexture(g_mgla);
+			SDL_DestroyTexture(g_zejscie);
+			SDL_DestroyTexture(g_schody);
 			Mix_FreeChunk(m_ciecie);
 			Mix_FreeChunk(m_chodzenie);
 			Mix_FreeChunk(m_obrazenia);
