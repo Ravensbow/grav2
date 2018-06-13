@@ -144,8 +144,11 @@ int main(int argc, char * args[])
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 	TTF_Init();
 	
+	SDL_Surface* icon;
+	icon = SDL_LoadBMP("Grafiki/g_icon.bmp");
+	window = SDL_CreateWindow("KWCpP", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
+	SDL_SetWindowIcon(window, icon);
 
-	window = SDL_CreateWindow("Gra", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
 	render = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 
 	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)cout << "errro" << endl;
@@ -153,7 +156,8 @@ int main(int argc, char * args[])
 
 	std::srand(time(NULL));
 
-
+	Mix_Chunk *m_hello = Mix_LoadWAV("Dzwieki/m_hello.wav");
+	Mix_PlayChannel(-1, m_hello, 0);
 
 	//Pêtla wykonawcza gry:
 	while (true)
@@ -242,8 +246,8 @@ int main(int argc, char * args[])
 			Przeciwnik gnom1("Gnom", 400, 500, 100,100,10,10,0,2,g_szkielet,ustawianie_rect_spraj(64,40,4));
 			Przeciwnik gnom2("Gnom inny", 500, 700, 100, 100, 10, 10, 0,2, g_szkielet, ustawianie_rect_spraj(64, 40, 4));
 
-			Szczur szczur(g_szczur);
-			Ogien ogien(g_ogien);
+			Szczur szczur(g_szczur,100,100,100);
+			Ogien ogien(g_ogien,100,100,100);
 			
 			Przedmiot miecz3("Tarcza Ateny", 600, 200, 100, 100,0,1, g_tarcza,g_tarcza,true,'t');
 			Przedmiot a;
@@ -554,7 +558,7 @@ int main(int argc, char * args[])
 						przeciwniksy[i]->atak(gracz,m_obrazenia);
 					}
 				///7. Mgla wojny:
-					mgla_wojny.update(render,gracz,zmiana_levelu);
+					//mgla_wojny.update(render,gracz,zmiana_levelu);
 				///0. UI:
 					ui.update(gracz, render,arial,nr_pietra,nazwa_pietra);
 					gracz.podnoszenie(przedmiksy, render, g_okno_przedmiotu, arial);
@@ -576,6 +580,7 @@ int main(int argc, char * args[])
 						SDL_Delay(5000);
 						SDL_DestroyTexture(napisek);
 					}
+					testowa_mapa.dodanie_przeciwnika(przeciwniksy,g_szczur,g_ogien);
 
 				//Odswiertzanie i czyszczenie:
 				klatka++;
@@ -653,13 +658,13 @@ int main(int argc, char * args[])
 
 		#pragma region Dzwieki
 			
-			Mix_Chunk *m_hello = Mix_LoadWAV("Dzwieki/m_hello.wav");
+			
 			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka2.wav");
 		#pragma endregion
 
 			int znacznikX = 460;
 			int znacznikY = 300;
-			Mix_PlayChannel(-1, m_hello, 0);
+			
 
 			///0. Muzyka:
 			if (Mix_PlayingMusic() == 0)

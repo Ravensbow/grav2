@@ -71,6 +71,7 @@ public:
 	//4. Efekty pasywne:
 	bool tura_wczasie_nalzoenia;
 	bool podpalenie = false; int licznik_podpalenia=0;
+	
 	bool stun = false; int licznik_stuna=0;
 	//3.Taimery:
 	Uint32 animacja_ciecia = 0;
@@ -131,6 +132,7 @@ public:
 	bool b_miss = false;
 	//4.Pasywne:
 	bool podpalenie = false;
+	bool moznosc_podpalania = false;
 	bool zamrozenie = false;
 
 	Przeciwnik(){}
@@ -151,13 +153,15 @@ class Szczur : public Przeciwnik
 {
 public:
 	Szczur() {}
-	Szczur(SDL_Texture *przec)
+	Szczur(SDL_Texture *przec,double px,double py,double szer)
 	{
 		aktywny = true;
 		nazwa = "Szczur";
 		
-		szerokosc = 100;
-		wysokosc = 100;
+		szerokosc = szer;
+		wysokosc = szer;
+		posX = px;
+		posY = py;
 		tekstura = przec;
 
 		zrecznosc = 10;
@@ -167,7 +171,7 @@ public:
 		zycie = 3;
 		max_zycie = 3;
 		wartosc_exp = 10;
-		podpalenie = false;
+		moznosc_podpalania = false;
 	}
 	void update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
 	string rodzaj() { return "Szczur"; }
@@ -176,13 +180,15 @@ class Ogien : public Przeciwnik
 {
 public:
 	Ogien() {}
-	Ogien(SDL_Texture *przec)
+	Ogien(SDL_Texture *przec, double px, double py, double szer)
 	{
 		aktywny = true;
 		nazwa = "Zywiolak Ognia";
 		
-		szerokosc = 100;
-		wysokosc = 100;
+		szerokosc = szer;
+		wysokosc = szer;
+		posX = px;
+		posY = py;
 		tekstura = przec;
 
 		zrecznosc = 30;
@@ -192,7 +198,7 @@ public:
 		zycie = 6;
 		max_zycie = 6;
 		wartosc_exp = 25;
-		podpalenie = true;
+		moznosc_podpalania = true;
 	}
 	void update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
 	string rodzaj() { return "Ogien"; }
@@ -305,6 +311,8 @@ public:
 class Klocek
 {
 	friend class Map;
+	friend class Szczur;
+	friend class Ogien;
 public:
 	double posX;
 	double posY;
@@ -352,6 +360,8 @@ public:
 class Zejscie : public Klocek
 {
 	friend class Map;
+	friend class Szczur;
+	friend class Ogien;
 
 public: 
 	Zejscie() {}
@@ -380,6 +390,8 @@ public:
 class Room
 {
 	friend class Map;
+	friend class Szczur;
+	friend class Ogien;
 public:
 	vector<Klocek*> kafelki;
 	string uklad;
@@ -764,11 +776,15 @@ private:
 class Map
 {
 	friend class Gracz;
+	friend class Szczur;
+	friend class Ogien;
 public:
 	vector<Room*> pokoje;
 	Map() {};
 	~Map() {};
 	bool zejscie = true;
+	Uint32 dodanie_licznik = 0;
+	bool dodanie = true;
 	
 	
 	string rodzaje_pomieszczen()
@@ -979,19 +995,14 @@ public:
 						cout << itr->rodzaj() << endl;
 						if (itr->rodzaj() == "Szczur") {
 							cout << "elo" << endl;
-							Szczur elo(itr->tekstura);
-							elo.posX = (*i)->kafelki[b]->posX;
-							elo.posY= (*i)->kafelki[b]->posY;
-						
+							Szczur elo(itr->tekstura, (*i)->kafelki[b]->posX, (*i)->kafelki[b]->posY, (*i)->kafelki[b]->szerokosc);
 							tp = new Szczur;
 							*tp = elo;
 							przedmioty.push_back(tp);
 						}
 						if (itr->rodzaj() == "Ogien") {
 							cout << "elo" << endl;
-							Ogien elo(itr->tekstura);
-							elo.posX = (*i)->kafelki[b]->posX;
-							elo.posY = (*i)->kafelki[b]->posY;
+							Ogien elo(itr->tekstura, (*i)->kafelki[b]->posX, (*i)->kafelki[b]->posY, (*i)->kafelki[b]->szerokosc);
 							tp = new Ogien;
 							*tp = elo;
 							przedmioty.push_back(tp);
@@ -1039,6 +1050,62 @@ public:
 		elo.chodzonosc = true;
 		*tp = elo;
 		pokoje[0]->kafelki.push_back(tp);
+	}
+
+	void dodanie_przeciwnika(vector<Przeciwnik*> &przeciwniki,SDL_Texture* szczur,SDL_Texture* ogien)
+	{
+		
+		
+		if (Uint32 i = SDL_GetTicks() - dodanie_licznik >= 30000&dodanie==false)
+		{
+
+			dodanie =true;
+
+		}
+
+		if (dodanie == true) {
+			int a = rand() % pokoje.size();
+			bool gowno = false;
+			do {
+				cout << gowno << endl;
+				int b = rand() % pokoje[a]->kafelki.size();
+				if (pokoje[a]->kafelki[b]->chodzonosc == true)
+				{
+					if (rand() % 2 == 0)
+					{
+						Przeciwnik* tp;
+						tp = new Szczur;
+						Szczur elo(szczur, pokoje[a]->kafelki[b]->posX, pokoje[a]->kafelki[b]->posY, pokoje[a]->kafelki[b]->szerokosc);
+						cout << "kafel:" << pokoje[a]->kafelki[b]->szerokosc << endl;
+						cout<<"niedidanmy:"<<elo.szerokosc << endl;
+
+						*tp = elo;
+						przeciwniki.push_back(tp);
+						cout<<"dodany"<<przeciwniki.back()->szerokosc << endl;
+					}
+					else
+					{
+						Przeciwnik* tp;
+						tp = new Ogien;
+						Ogien elo(ogien, pokoje[a]->kafelki[b]->posX, pokoje[a]->kafelki[b]->posY, pokoje[a]->kafelki[b]->szerokosc);
+					
+						elo.aktywny = true;
+
+						*tp = elo;
+						przeciwniki.push_back(tp);
+					}
+					gowno = true;
+				}
+
+			} while (gowno == false);
+		}
+		if (dodanie == true)
+		{
+			dodanie_licznik = SDL_GetTicks();
+			dodanie = false;
+		}
+		cout<<przeciwniki.size() << endl;
+
 	}
 
 	void clear()

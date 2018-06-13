@@ -225,7 +225,7 @@ void Przeciwnik::atak(Gracz &gracz, Mix_Chunk *m_obrazenia)
 		
 		
 		//Podpalenie:
-		if (rand() % 4 == 0)
+		if (rand() % 4 == 0&&moznosc_podpalania==true)
 		{
 			gracz.podpalenie = true;
 			gracz.licznik_podpalenia = 8;
@@ -432,7 +432,7 @@ Przedmiot::Przedmiot(string imie, double px, double py, double sze, double wy,do
 	}
 	if (rodzaj == 't')
 	{
-		 sila = 2 + rand() % 10;
+		 sila = 2 ;
 		 zrecznosc = 0;
 		 inteligencja = 0;
 	}
@@ -1444,7 +1444,7 @@ void Gracz::atak(vector<Przeciwnik*> &przeciwnik, SDL_Texture *g_znacznik, SDL_T
 		
 		for (int i = 0; i < przeciwnik.size(); i++)
 		{
-			cout << znaczY << ":" << przeciwnik[i]->posX << endl;
+			
 			if (znaczX == przeciwnik[i]->posX && znaczY == przeciwnik[i]->posY&&przeciwnik[i]->aktywny == true && GetAsyncKeyState(VK_RETURN))
 			{
 				
