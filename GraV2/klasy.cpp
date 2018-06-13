@@ -346,23 +346,7 @@ void Przeciwnik::skalowanie(double przesuniecieX, double przesuniecieY, double s
 
 //Szczury:
 
-Szczur::Szczur(string imie, double px, double py, double wy, double sze, double max, double zre, double inte, double obra, SDL_Texture *przec, vector<SDL_Rect> spr)
-{
-	aktywny = true;
-	nazwa = imie;
-	posX = px;
-	posY = py;
-	szerokosc = sze;
-	wysokosc = wy;
-	tekstura = przec;
 
-	zrecznosc = zre;
-	inteligencja = inte;
-	spreje = spr;
-	obrazenia = obra;
-	zycie = max;
-	max_zycie = max;
-}
 
 void Szczur::update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial)
 {
@@ -380,7 +364,36 @@ void Szczur::update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie
 		obr.w = szerokosc / 2;
 		obr.h = wysokosc / 2;
 
-		SDL_RenderCopy(render, tekstura, &spreje[taimer_animacji(_t, _s, 3, 20)], &rect);
+		SDL_RenderCopy(render, tekstura, &spreje[taimer_animacji(_t, _s, 3, 100)], &rect);
+
+		//Animacja: 
+		animacje_ataku(render, ciecie, arial);
+		//Pasek Zdrowia:	
+		rect.y -= 10;
+		rect.h = wysokosc / 10;
+		rect.w = szerokosc * ((double)zycie / (double)max_zycie);
+		SDL_RenderCopy(render, zdrowie, NULL, &rect);
+
+	}
+}
+
+void Ogien::update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial)
+{
+	if (aktywny == true)
+	{
+		if (zycie <= 0)aktywny = false;
+
+		SDL_Rect rect;
+
+		rect.x = posX;
+		rect.y = posY;
+		rect.w = wysokosc;
+		rect.h = szerokosc;
+
+		obr.w = szerokosc / 2;
+		obr.h = wysokosc / 2;
+
+		SDL_RenderCopy(render, tekstura, &spreje[taimer_animacji(_t, _s, 2, 100)], &rect);
 
 		//Animacja: 
 		animacje_ataku(render, ciecie, arial);
@@ -494,7 +507,7 @@ Przedmiot::~Przedmiot()
 	 na = napis(0, 0, 0, font, render, nazwa);
 	 SDL_RenderCopy(render, na, NULL, &rect);
 	 SDL_DestroyTexture(na);
-	 if (obrazenia > 0)
+	 if (obrazenia != 0)
 	 {
 		 rect.h = 30;
 		 rect.w = 70;
@@ -504,7 +517,7 @@ Przedmiot::~Przedmiot()
 		 SDL_RenderCopy(render,na,NULL,&rect);
 		 SDL_DestroyTexture(na);
 	 }
-	 else if (ochrona > 0)
+	 else if (ochrona != 0|| rodzaj_kalsy() == "Zbroja")
 	 {
 		 rect.h = 30;
 		 rect.w = 70;
@@ -515,7 +528,7 @@ Przedmiot::~Przedmiot()
 		 SDL_DestroyTexture(na);
 	 }
 	 int i = 0;
-	 if (sila > 0)
+	 if (sila != 0)
 		 {
 			 rect.h = 20;
 			 rect.w = 60;
@@ -526,19 +539,20 @@ Przedmiot::~Przedmiot()
 			 i++;
 			 SDL_DestroyTexture(na);
 		 }
-	 if (zrecznosc > 0)
+	 if (zrecznosc != 0)
 		 {
 			 rect.h = 20;
 			 rect.w = 100;
 			 rect.x = px + 205;
 			 rect.y = py + 100 + (20 * i);
-			 na = napis(20, 255, 25, font, render, "+" + to_string((int)zrecznosc) + " zrecznosci");
+			 if(zrecznosc>=0)na = napis(20, 255, 25, font, render, "+" + to_string((int)zrecznosc) + " zrecznosci");
+			 else na = napis(255, 155, 0, font, render, to_string((int)zrecznosc) + " zrecznosci");
 			 SDL_RenderCopy(render, na , NULL, &rect);
 			 i++;
 			 SDL_DestroyTexture(na);
 		 }
 	
-	 if (inteligencja > 0)
+	 if (inteligencja != 0)
 	 {
 		 rect.h = 20;
 		 rect.w = 100;
@@ -587,6 +601,10 @@ bool Potion::uzycie(Gracz &gracz)
 	if (rodzaj == 'u') {
 		gracz.zycie += (int)(0.25*gracz.max_zycie);
 		if (gracz.zycie > gracz.max_zycie)gracz.zycie = gracz.max_zycie;
+	}
+	if (rodzaj == '1') {
+		gracz.exp += 100;
+		
 	}
 	if(rodzaj!='q')return true;
 	else return false;
@@ -738,19 +756,6 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 				}
 			}
 			
-			//Wyswietlanie zalozonych:
-			if (znacznikX == 249)
-			{
-				gracz.zalozone[0].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
-			}
-			if (znacznikX == 189)
-			{
-				gracz.zalozone[2].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
-			}
-			if (znacznikX == 129)
-			{
-				gracz.zalozone[1].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
-			}
 			
 			if (znacznikX == 317 + (j * 90) && GetAsyncKeyState(VK_RETURN))
 			{
@@ -759,7 +764,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 				
 				if (znacznikY == 59 + (p * 90)) {
 					SDL_Delay(200);
-					if ((*itr)->rodzaj == 'z')
+					if ((*itr)->rodzaj == 'z'&& (*itr)->wymagana_sila<=gracz.sila)
 					{
 
 
@@ -790,7 +795,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 						itr = gracz.ekwipunek.erase(itr);
 						break;
 					}
-					else if ((*itr)->rodzaj == 'm')
+					else if ((*itr)->rodzaj == 'm' && (*itr)->wymagana_sila <= gracz.sila)
 					{
 
 
@@ -817,7 +822,7 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 						break;
 
 					}
-					else if ((*itr)->rodzaj == 't')
+					else if ((*itr)->rodzaj == 't' && (*itr)->wymagana_sila <= gracz.sila)
 					{
 
 
@@ -875,6 +880,20 @@ void Okno_eq::update(SDL_Texture *tekstura, SDL_Texture *g_znacznik,SDL_Texture 
 			j++;
 
 		}
+		//Wyswietlanie okienka zalozonych:
+		if (znacznikX == 249 && gracz.zalozone[0].nazwa != "")
+		{
+			gracz.zalozone[0].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
+		}
+		if (znacznikX == 189&&gracz.zalozone[2].nazwa!="")
+		{
+			gracz.zalozone[2].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
+		}
+		if (znacznikX == 129 && gracz.zalozone[1].nazwa != "")
+		{
+			gracz.zalozone[1].okno_informacji(render, g_okno_przedmiotu, arial, 800, 500);
+		}
+
 		i = 0;
 		statystyki(gracz, render, arial);
 		//Render Zalozonych:
@@ -923,7 +942,7 @@ void Okno_eq::sterowanie(Gracz gracz)
 	
 }
 
-void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer *render, vector<Przedmiot*> &przedmiksy,Map mapa)
+void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik*> &przeciwniki,SDL_Renderer *render, vector<Przedmiot*> &przedmiksy,Map mapa)
 {
 	if (prz_zutu==true)
 	{
@@ -961,7 +980,7 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 		
 		for (int i = 0; i < przeciwniki.size(); i++)
 		{
-			if ( przeciwniki[i].posX == polozenie_zutuX && przeciwniki[i].posY == polozenie_zutuY && przeciwniki[i].aktywny == true)
+			if ( przeciwniki[i]->posX == polozenie_zutuX && przeciwniki[i]->posY == polozenie_zutuY && przeciwniki[i]->aktywny == true)
 			{
 				
 				prz_zutu = false;
@@ -971,8 +990,8 @@ void Okno_eq::zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki,SDL_Renderer
 					if (*itr == zutka)
 					{
 						(*itr)->amunicja--;
-						przeciwniki[i].zycie -= (*itr)->obrazenia;
-						przeciwniki[i].potion((*itr)->rodzaj);
+						przeciwniki[i]->zycie -= (*itr)->obrazenia;
+						przeciwniki[i]->potion((*itr)->rodzaj);
 						if ((*itr)->amunicja <= 0)itr = gracz.ekwipunek.erase(itr);
 						prz_lotu = 0;
 						break;
@@ -1114,6 +1133,21 @@ void Okno_eq::statystyki(Gracz &gracz, SDL_Renderer *render,TTF_Font *arial)
 	rect.w = to_string((int)gracz.ochrona).size() * 10;
 	SDL_RenderCopy(render, na, NULL, &rect);
 	SDL_DestroyTexture(na);
+	//LVL:
+	na= napis(0, 0, 0, arial, render, "LVL: "+ to_string((int)gracz.lvl));
+	
+	rect.h = 40;
+	rect.x -= 110;
+	rect.y -= 60;
+	rect.w = (to_string((int)gracz.lvl).size()+5) * 20;
+	SDL_RenderCopy(render, na, NULL, &rect);
+	SDL_DestroyTexture(na);
+	na = napis(0, 0, 0, arial, render, to_string((int)gracz.exp)+"/"+to_string((int)gracz.next_exp));
+	rect.h = 20;
+	rect.w = (to_string((int)gracz.exp).size()+ to_string((int)gracz.next_exp).size() + 1) * 10;
+	rect.y += 40;
+	SDL_RenderCopy(render, na, NULL, &rect);
+	SDL_DestroyTexture(na);
 }
 
 
@@ -1146,7 +1180,7 @@ Gracz::~Gracz()
 
 void Gracz::update(SDL_Renderer *render,int &_s,int &_t,SDL_Texture *zdrowie,TTF_Font *arial,SDL_Texture *g_obrazenia)
 {
-	
+	lvlup();
 	SDL_Rect rect;
 	rect.x = posX;
 	rect.y = posY;
@@ -1168,13 +1202,13 @@ void Gracz::update(SDL_Renderer *render,int &_s,int &_t,SDL_Texture *zdrowie,TTF
 
 }
 
-bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, Map mapa, int a){
+bool Gracz::przesuwanie_gracz(vector<Przeciwnik*> &przeciwniki, Map mapa, int a){
 	bool gowno=true;
 	if (a == 1)
 	{
 		for (auto i = przeciwniki.begin(); i != przeciwniki.end(); i++)
 		{
-			if (posX-szerokosc==i->posX&&posY==i->posY&&i->aktywny==true)
+			if (posX-szerokosc==(*i)->posX&&posY==(*i)->posY&&(*i)->aktywny==true)
 			{
 				gowno = false;
 				
@@ -1186,7 +1220,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, Map mapa, int a){
 	{
 		for (auto i = przeciwniki.begin(); i != przeciwniki.end(); i++)
 		{
-			if (posX + szerokosc == i->posX&&posY == i->posY&&i->aktywny == true)
+			if (posX + szerokosc == (*i)->posX&&posY == (*i)->posY&& (*i)->aktywny == true)
 			{
 				gowno = false;
 				
@@ -1197,7 +1231,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, Map mapa, int a){
 	{
 		for (auto i = przeciwniki.begin(); i != przeciwniki.end(); i++)
 		{
-			if (posY - szerokosc == i->posY&&posX == i->posX&&i->aktywny == true)
+			if (posY - szerokosc == (*i)->posY&&posX == (*i)->posX&& (*i)->aktywny == true)
 			{
 				gowno = false;
 				
@@ -1208,7 +1242,7 @@ bool Gracz::przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, Map mapa, int a){
 	{
 		for (auto i = przeciwniki.begin(); i != przeciwniki.end(); i++)
 		{
-			if (posY+ szerokosc == i->posY&&posX == i->posX&&i->aktywny == true)
+			if (posY+ szerokosc == (*i)->posY&&posX == (*i)->posX&& (*i)->aktywny == true)
 			{
 				gowno = false;
 				
@@ -1260,7 +1294,7 @@ bool Gracz::kolizja_gracz(Map mapa, int a)
 	return niemoszna;
 }
 
-void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_chodzenie, Map mapa)
+void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik*> &przeciwniki, Mix_Chunk *m_chodzenie, Map mapa)
 {
 	
 		if (GetAsyncKeyState(VK_LEFT) && tura == true && okno_eq.prz_eq == false && wlaczanie_ataku == false&&okno_eq.prz_zutu==false)
@@ -1271,7 +1305,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chun
 					posX -= szerokosc;
 					flip = SDL_FLIP_HORIZONTAL;
 					tura = false;
-					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
+					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i]->tura = true;
 					Mix_PlayChannel(1, m_chodzenie, 0);
 					SDL_Delay(155);
 					
@@ -1287,7 +1321,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chun
 					posX = posX + szerokosc;
 					flip = SDL_FLIP_NONE;
 					tura = false;
-					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
+					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i]->tura = true;
 					Mix_PlayChannel(1, m_chodzenie, 0);
 					SDL_Delay(155);
 					
@@ -1301,7 +1335,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chun
 				if (przesuwanie_gracz(przeciwniki, mapa, 3) == true && kolizja_gracz(mapa, 3) == true) {
 					posY = posY - szerokosc;
 					tura = false;
-					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
+					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i]->tura = true;
 					Mix_PlayChannel(1, m_chodzenie, 0);
 					SDL_Delay(155);
 					
@@ -1315,7 +1349,7 @@ void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chun
 				if (przesuwanie_gracz(przeciwniki, mapa, 4) == true && kolizja_gracz(mapa, 4) == true) {
 					posY = posY + szerokosc;
 					tura = false;
-					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i].tura = true;
+					for (int i = 0; i < przeciwniki.size(); i++)przeciwniki[i]->tura = true;
 					Mix_PlayChannel(1, m_chodzenie, 0);
 					SDL_Delay(155);
 					
@@ -1325,16 +1359,21 @@ void Gracz::poruszanie(Okno_eq okno_eq,vector<Przeciwnik> &przeciwniki, Mix_Chun
 	
 }
 
-void Gracz::koniec(vector<Przeciwnik> &przeciwnik)
+void Gracz::koniec(vector<Przeciwnik*> &przeciwnik)
 {
 	tura = true;
 	
 }
 
-void Gracz::podnoszenie(vector<Przedmiot*> &przedmiot)
+void Gracz::podnoszenie(vector<Przedmiot*> &przedmiot,SDL_Renderer* render,SDL_Texture* teks,TTF_Font* arial)
 {
 	for (auto itr = przedmiot.begin(); itr != przedmiot.end();itr++) {
-		if ((int)posX == (int)(*itr)->posX && (int)posY == (int)(*itr)->posY)
+		if ((int)posX == (int)(*itr)->posX && (int)posY == (int)(*itr)->posY&& (*itr)->aktywny == true)
+		{
+			(*itr)->okno_informacji(render, teks, arial, 700, 400);
+			cout << "elo" << endl;
+		}
+		if ((int)posX == (int)(*itr)->posX && (int)posY == (int)(*itr)->posY&&GetAsyncKeyState(VK_SPACE))
 		{
 
 			if ((*itr)->aktywny == true)
@@ -1367,7 +1406,7 @@ void Gracz::atak_przycisk()
 	}
 }
 
-void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render,Mix_Chunk *m_ciecie)
+void Gracz::atak(vector<Przeciwnik*> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render,Mix_Chunk *m_ciecie)
 {
 	if (wlaczanie_ataku==true)
 	{
@@ -1405,23 +1444,24 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 		
 		for (int i = 0; i < przeciwnik.size(); i++)
 		{
-			cout << znaczY << ":" << przeciwnik[i].posX << endl;
-			if (znaczX == przeciwnik[i].posX && znaczY == przeciwnik[i].posY&&przeciwnik[i].aktywny == true && GetAsyncKeyState(VK_RETURN))
+			cout << znaczY << ":" << przeciwnik[i]->posX << endl;
+			if (znaczX == przeciwnik[i]->posX && znaczY == przeciwnik[i]->posY&&przeciwnik[i]->aktywny == true && GetAsyncKeyState(VK_RETURN))
 			{
 				
-				if (rand()%100<70+((int)zrecznosc-(int)(przeciwnik[i].zrecznosc/2)))
+				if (rand()%100<70+((int)zrecznosc-(int)(przeciwnik[i]->zrecznosc/2)))
 				{
-					przeciwnik[i].obr.x = przeciwnik[i].posX; przeciwnik[i].obr.y = przeciwnik[i].posY+10;
-					przeciwnik[i].zycie -= obrazenia;
-					przeciwnik[i].przedchwila_zadane_obrazenia = obrazenia;
-					przeciwnik[i].b_ciecia = true;
-					przeciwnik[i].animacja_ciecia = SDL_GetTicks();
+					przeciwnik[i]->obr.x = przeciwnik[i]->posX; przeciwnik[i]->obr.y = przeciwnik[i]->posY+10;
+					przeciwnik[i]->zycie -= obrazenia;
+					przeciwnik[i]->przedchwila_zadane_obrazenia = obrazenia;
+					przeciwnik[i]->b_ciecia = true;
+					przeciwnik[i]->animacja_ciecia = SDL_GetTicks();
 					Mix_PlayChannel(-1, m_ciecie, 0);
+					if (przeciwnik[i]->zycie <= 0)exp += przeciwnik[i]->wartosc_exp;
 				}
 				else
 				{
-					przeciwnik[i].b_miss = true;
-					przeciwnik[i].animacja_miss = SDL_GetTicks();
+					przeciwnik[i]->b_miss = true;
+					przeciwnik[i]->animacja_miss = SDL_GetTicks();
 				}
 				wlaczanie_ataku = false;
 				tura = false;
@@ -1432,7 +1472,7 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 			if (wlaczanie_ataku == false)
 			{
 				for (int i = 0; i < przeciwnik.size(); i++) {
-					przeciwnik[i].tura = true;
+					przeciwnik[i]->tura = true;
 				}
 			}
 		}
@@ -1440,7 +1480,7 @@ void Gracz::atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Te
 	}
 }
 
-void Gracz::pauza(vector<Przeciwnik> &przeciwnik)
+void Gracz::pauza(vector<Przeciwnik*> &przeciwnik)
 {
 	if (GetAsyncKeyState(0x50)) {
 		SDL_Delay(200);
@@ -1448,7 +1488,7 @@ void Gracz::pauza(vector<Przeciwnik> &przeciwnik)
 		for (auto itr = przeciwnik.begin(); itr != przeciwnik.end(); itr++)
 		{
 			
-				itr->tura = true;
+				(*itr)->tura = true;
 			
 		}
 	}
@@ -1551,6 +1591,20 @@ void Gracz::usuwanie_mgly(Map &mapa,SDL_Texture* g_mgla)
 				(*j)->tekstura = g_mgla;
 			}
 		}
+	}
+}
+
+void Gracz::lvlup()
+{
+	
+	if (exp >= next_exp)
+	{
+		max_zycie += 4;
+		sila += 1;
+		obrazenia += 1;
+		exp = 0;
+		next_exp += 50;
+		lvl++;
 	}
 }
 

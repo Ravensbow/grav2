@@ -21,6 +21,13 @@ class Map;
 
 
 
+//Funkcje:
+
+vector<SDL_Rect> ustawianie_rect_spraj(int wys, int szer, int kolumny);
+int taimer_animacji(int &_t, int &_s, int liczba_klatek, int odswierzanie);
+int taimer(Uint32 czas, int liczba_klatek, Uint32 odswierzanie);
+string zmiana_nazwy(int nr_podziemia);
+SDL_Texture* napis(int c1, int c2, int c3, TTF_Font*arial, SDL_Renderer* render, string napis);
 
 
 class Gracz
@@ -48,6 +55,9 @@ public:
 	double obrazenia;
 	double ochrona;
 	int przedchwila_zadane_obrazenia;
+	int lvl=1;
+	int exp = 0;
+	int next_exp = 100;
 	SDL_Rect obr;
 	SDL_RendererFlip flip = SDL_FLIP_NONE;
 	//3. ...
@@ -72,18 +82,19 @@ public:
 	Gracz( double, double, double, double,bool, SDL_Texture*, SDL_Texture*);
 	~Gracz();
 	void update(SDL_Renderer *render,int &_s,int &_t, SDL_Texture *zdrowie, TTF_Font *arial, SDL_Texture *g_obrazenia);
-	void poruszanie(Okno_eq okno_eq, vector<Przeciwnik> &przeciwniki, Mix_Chunk *m_ciecie, Map mapa);
-	void koniec(vector<Przeciwnik> &przeciwnik);
-	void podnoszenie(vector<Przedmiot*> &przedmiot);
+	void poruszanie(Okno_eq okno_eq, vector<Przeciwnik*> &przeciwniki, Mix_Chunk *m_ciecie, Map mapa);
+	void koniec(vector<Przeciwnik*> &przeciwnik);
+	void podnoszenie(vector<Przedmiot*> &przedmiot, SDL_Renderer* render, SDL_Texture* teks, TTF_Font* arial);
 	void atak_przycisk();
-	void atak(vector<Przeciwnik> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render, Mix_Chunk *m_chodzenie);
-	void pauza(vector<Przeciwnik> &przeciwnik);
-	bool przesuwanie_gracz(vector<Przeciwnik> &przeciwniki, Map mapa, int a);
+	void atak(vector<Przeciwnik*> &przeciwnik, SDL_Texture *g_znacznik, SDL_Texture *g_ciecie, SDL_Renderer *render, Mix_Chunk *m_chodzenie);
+	void pauza(vector<Przeciwnik*> &przeciwnik);
+	bool przesuwanie_gracz(vector<Przeciwnik*> &przeciwniki, Map mapa, int a);
 	void efekty_pasywne();
 	void animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial);
 	void skalowanie(double przesuniecieX, double przesuniecieY,double skala);
 	bool kolizja_gracz(Map mapa, int a);
 	void usuwanie_mgly(Map &mapa, SDL_Texture* g_mgla);
+	void lvlup();
 };
 
 class Przeciwnik
@@ -111,6 +122,7 @@ public:
 	int zycie;
 	int max_zycie;
 	int przedchwila_zadane_obrazenia;
+	int wartosc_exp = 10;
 	//3.Taimery:
 	Uint32 animacja_ciecia = 0; 
 	bool b_ciecia = false;
@@ -131,15 +143,62 @@ public:
 	void potion(char rodzaj);
 	void animacje_ataku(SDL_Renderer *render, SDL_Texture *tekstura_ataku, TTF_Font *arial);
 	void skalowanie(double przesuniecieX, double przesuniecieY, double skala);
+	virtual string rodzaj() { return "zwykle"; }
 };
 
+#pragma region Przeciwniki
 class Szczur : public Przeciwnik
 {
 public:
 	Szczur() {}
-	Szczur(string imie, double px, double py, double wy, double sze, double max, double zre, double inte, double obra, SDL_Texture *przec, vector<SDL_Rect> spr);
+	Szczur(SDL_Texture *przec)
+	{
+		aktywny = true;
+		nazwa = "Szczur";
+		
+		szerokosc = 100;
+		wysokosc = 100;
+		tekstura = przec;
+
+		zrecznosc = 10;
+		inteligencja = 0;
+		spreje = ustawianie_rect_spraj( 60,  60, 3);
+		obrazenia = 1;
+		zycie = 3;
+		max_zycie = 3;
+		wartosc_exp = 10;
+		podpalenie = false;
+	}
 	void update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
+	string rodzaj() { return "Szczur"; }
 };
+class Ogien : public Przeciwnik
+{
+public:
+	Ogien() {}
+	Ogien(SDL_Texture *przec)
+	{
+		aktywny = true;
+		nazwa = "Zywiolak Ognia";
+		
+		szerokosc = 100;
+		wysokosc = 100;
+		tekstura = przec;
+
+		zrecznosc = 30;
+		inteligencja = 0;
+		spreje = ustawianie_rect_spraj(100, 100, 2);
+		obrazenia = 3;
+		zycie = 6;
+		max_zycie = 6;
+		wartosc_exp = 25;
+		podpalenie = true;
+	}
+	void update(SDL_Renderer *render, int &_s, int &_t, SDL_Texture *zdrowie, SDL_Texture *ciecie, TTF_Font *arial);
+	string rodzaj() { return "Ogien"; }
+};
+
+#pragma endregion
 
 class Przedmiot
 {
@@ -178,7 +237,7 @@ public:
 	Przedmiot();
 	~Przedmiot();
 	virtual bool uzycie(Gracz &gracz) { return false; }
-	virtual char rodzaj_kalsy() { return 'I'; }
+	virtual string rodzaj_kalsy() { return "zwykly"; }
 	virtual void update( SDL_Renderer *render);
 	virtual void okno_informacji(SDL_Renderer* render, SDL_Texture *tekstura, TTF_Font *font, double px, double py);
 	void skalowanie(double przesuniecieX, double przesuniecieY, double skala);
@@ -191,7 +250,7 @@ public:
 	Potion(){}
 	Potion(string, double, double, double, double, SDL_Texture*, bool, char,int,double);
 	bool uzycie(Gracz &gracz);
-	char rodzaj_kalsy() { return 'O'; }
+	string rodzaj_kalsy() { return "Potion"; }
 	void update(SDL_Renderer *render);
 };
 
@@ -221,7 +280,7 @@ public:
 	~Okno_eq();
 	void update(SDL_Texture *tekstura, SDL_Texture *g_znacznik, SDL_Texture *g_okno_przedmiotu, TTF_Font*arial,SDL_Renderer *render,Gracz &gracz);
 	void sterowanie(Gracz gracz);
-	void zucanie(Gracz &gracz, vector<Przeciwnik> &przeciwniki, SDL_Renderer *render, vector<Przedmiot*> &przedmiksy,Map mapa);
+	void zucanie(Gracz &gracz, vector<Przeciwnik*> &przeciwniki, SDL_Renderer *render, vector<Przedmiot*> &przedmiksy,Map mapa);
 	void statystyki(Gracz &gracz, SDL_Renderer *render,TTF_Font *arial);
 };
 
@@ -330,12 +389,12 @@ public:
 
 	Room() {}
 
-	Room(string uk, SDL_Texture *podloga, SDL_Texture *sciana,bool &zejscie) {
+	Room(string uk, SDL_Texture *podloga, SDL_Texture *podloga2, SDL_Texture *podloga3, SDL_Texture *podloga4, SDL_Texture *sciana,bool &zejscie) {
 		uklad = uk;
-		ukladanie_kafelkow(podloga, sciana,zejscie);
+		ukladanie_kafelkow(podloga, podloga2, podloga3, podloga4, sciana,zejscie);
 	}
 
-	void ukladanie_kafelkow(SDL_Texture *podloga, SDL_Texture *sciana,bool &zejscie)
+	void ukladanie_kafelkow(SDL_Texture *podloga, SDL_Texture *podloga2, SDL_Texture *podloga3, SDL_Texture *podloga4, SDL_Texture *sciana,bool &zejscie)
 	{
 		int j = 0;
 		int k = 0;
@@ -347,6 +406,11 @@ public:
 			{
 				Klocek kloc(0 + k * 100, 0 + j * 100, podloga);
 				kloc.chodzonosc = true;
+				int p = rand() % 7;
+				if (p == 0)kloc.tekstura=podloga2;
+				else if (p == 1)kloc.tekstura=podloga3;
+				else if (p == 3)kloc.tekstura=podloga4;
+				
 				tp = new Klocek;
 				*tp = kloc;
 				kafelki.push_back(tp);
@@ -551,6 +615,152 @@ public:
 	}
 };
 
+#pragma region Przedmioty
+//Przedmioty:  
+
+class Zbroja :public Przedmiot
+{
+	friend class Map;
+public:
+	Zbroja() {};
+	Zbroja(SDL_Texture* teks, SDL_Texture* teks_r, string nazw)
+	{
+		posX = 0;
+		posY = 0;
+		wysokosc = 100;
+		szerokosc = 100;
+		rodzaj = 'z';
+		nazwa = nazw;
+		tekstura = teks;
+		tekstura_r = teks_r;
+		aktywny = true;
+		zucane = false;
+
+		if (nazw == "Skorzana Zbroja")
+		{
+			if (rand() % 3 == 0)
+			{
+				zrecznosc = 2;
+			}
+			else
+			{
+				zrecznosc = 0;
+			}
+			sila = 0;
+			inteligencja = 0;
+			obrazenia = 0;
+			ochrona = 2;
+			wymagana_sila = 3;
+		}
+		if (nazw == "Szata Maga")
+		{
+			if (rand() % 3 == 0)inteligencja = 6;
+			else inteligencja = 3;
+			sila = 0;
+			zrecznosc = 0;
+			obrazenia = 0;
+			ochrona = 0;
+			wymagana_sila = 0;
+		}
+		if (nazw == "Zbroja Plytowa")
+		{
+			inteligencja = 0;
+			if (rand() % 3 == 0)sila = 2;
+			else sila = 0;
+			zrecznosc = -2;
+			obrazenia = 0;
+			ochrona = 3;
+			wymagana_sila = 5;
+		}
+		if (nazw == "Hwang")
+		{
+			
+				inteligencja = 3;
+				sila = 3;
+				zrecznosc = 3;
+				obrazenia = 0;
+				ochrona = 8;
+				wymagana_sila = 12;
+			
+		}
+
+	}
+
+	string rodzaj_kalsy() { return "Zbroja"; }
+
+private:
+
+
+};
+
+class Miecz :public Przedmiot
+{
+	friend class Map;
+public:
+	Miecz() {};
+	Miecz(SDL_Texture* teks, SDL_Texture* teks_r, string nazw)
+	{
+		posX = 0;
+		posY = 0;
+		wysokosc = 100;
+		szerokosc = 100;
+		rodzaj = 'm';
+		nazwa = nazw;
+		tekstura = teks;
+		tekstura_r = teks_r;
+		aktywny = true;
+		zucane = false;
+
+		if (nazw == "Maly Sztylet")
+		{
+			inteligencja = 0;
+			sila = 0;
+			if (rand() % 3 == 0)zrecznosc = 3;
+			else zrecznosc = 1;
+			obrazenia = 1;
+			ochrona = 0;
+			wymagana_sila = 1;
+		}
+		if (nazw == "Prosty Miecz")
+		{
+			inteligencja = 0;
+			sila = 0;
+			zrecznosc = -1;
+			obrazenia = 4;
+			ochrona = 0;
+			wymagana_sila = 4;
+		}
+		if (nazw == "Katana")
+		{
+			inteligencja = 0;
+			sila = 0;
+			zrecznosc = 4;
+			obrazenia = 2;
+			ochrona = 0;
+			wymagana_sila = 4;
+		}
+		if (nazw == "Miecz Syriusza")
+		{
+			inteligencja = 2;
+			sila = 2;
+			zrecznosc = 2;
+			obrazenia = 6;
+			ochrona = 2;
+			wymagana_sila = 6;
+		}
+
+
+	}
+
+	string rodzaj_kalsy() { return "Miecz"; }
+
+private:
+
+};
+
+#pragma endregion
+
+
 class Map
 {
 	friend class Gracz;
@@ -560,6 +770,7 @@ public:
 	~Map() {};
 	bool zejscie = true;
 	
+	
 	string rodzaje_pomieszczen()
 	{
 		int a;
@@ -567,7 +778,8 @@ public:
 		a = rand() % 4;
 		if (a == 0)
 		{
-			pom = "CCCC`CCC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHCCCCCCCCCCCC/<HHHHHHHHHHHHHHHHH>/CHHHHHHHHHHHHHHHHHC/CHHHHHHHHHHHHHHHHHC/C,CCCCCCC,CCCCCCC,C";
+			//pom = "CCCC`CCC/CHHHHHHC/CHHHHHHC/CHHHHHHC/CHHHHHHCCCCCCC/<HHHHHHHHHHHH>/CHHHHHHHHHHHHC/CHHHHHHHHHHHHC/C,CCCCC,CCCC,C";
+			pom = "CCC`CCC/CHHHHHC/CHHHHHC/<HHHHH>/CHHHHHC/CHHHHHC/CCC,CCC";
 		}
 		if (a == 1)
 		{
@@ -584,7 +796,7 @@ public:
 		return pom;
 	}
 
-	void ukladanie_pokoi(SDL_Texture *podloga, SDL_Texture *sciana,Map &mapa)
+	void ukladanie_pokoi(SDL_Texture *podloga, SDL_Texture *podloga2, SDL_Texture *podloga3, SDL_Texture *podloga4, SDL_Texture *sciana,Map &mapa)
 	{
 		Room* tp;
 		Room* tp2;
@@ -603,8 +815,11 @@ public:
 				przesuniecieY = najwieksza_wysokosc;
 			}
 			string rodz = rodzaje_pomieszczen();
-			Room pokoj(rodz, podloga, sciana,zejscie);
-			Room pokoj2(rodz, podloga, sciana,zejscie);
+			int a = rand() % 10;
+			Room  pokoj(rodz, podloga, podloga2, podloga3, podloga4, sciana, zejscie);
+			
+
+			Room pokoj2(rodz, podloga, podloga2, podloga3, podloga4, sciana,zejscie);
 
 			if (pokoj.wysokosc > najwieksza_wysokosc)
 			{
@@ -634,11 +849,12 @@ public:
 			(*i)->kanalowanie();
 		}
 		
-		//for (int i = 0; i < 9; i++) {
-		//	for (int j = 0; j < 9; j++) {
-		//		if(j!=i)pokoje[i]->dodawanie_sciezek(pokoje[j], podloga);
-		//	 }
-		//}
+		/*for (int i = 0; i < 9; i++) {
+			for (int j = 0; j < 9; j++) {
+				if(j!=i)pokoje[i]->dodawanie_sciezek(pokoje[j], podloga);
+			 }
+		}
+		*/
 		
 		pokoje[0]->dodawanie_sciezek(pokoje[3], podloga); pokoje[0]->dodawanie_sciezek(pokoje[1], podloga);
 		pokoje[1]->dodawanie_sciezek(pokoje[2], podloga); pokoje[1]->dodawanie_sciezek(pokoje[4], podloga); pokoje[1]->dodawanie_sciezek(pokoje[5], podloga);
@@ -666,6 +882,7 @@ public:
 		{
 			pokoje[i]->update(render,gracz,zmiana_lvl);
 		}
+		
 	}
 	
 	void skalowanie(double przesuniecieX, double przesuniecieY, double skala)
@@ -689,54 +906,133 @@ public:
 	void resp_item(vector<Przedmiot*> szablon_przedmiotow, vector<Przedmiot*> &przedmioty)
 	{
 		for (auto i = pokoje.begin(); i != pokoje.end(); i++) {
-			if (rand() % 10 > 4)
+			bool dodalo = false;
+			if (rand() % 10 >3)
 			{
-				Przedmiot* tp;
+				do
+				{
+					int b = rand() % (*i)->kafelki.size();
+					if ((*i)->kafelki[b]->chodzonosc == true)
+					{
+						Przedmiot* tp;
+
+						Przedmiot *itr = szablon_przedmiotow[int((rand() % szablon_przedmiotow.size()))];
+						cout << itr->rodzaj_kalsy() << endl;
+						if (itr->rodzaj_kalsy() == "Potion") {
+							cout << "elo" << endl;
+							Potion elo(itr->nazwa, (*i)->kafelki[b]->posX, (*i)->kafelki[b]->posY, itr->szerokosc, itr->wysokosc, itr->tekstura, true, itr->rodzaj, 1, itr->obrazenia);
+							tp = new Potion;
+							*tp = elo;
+							przedmioty.push_back(tp);
+						}
+						if (itr->rodzaj_kalsy() == "zwykly") {
+							cout << "elo" << endl;
+							Przedmiot elo(itr->nazwa, (*i)->kafelki[b]->posX, (*i)->kafelki[b]->posY, itr->szerokosc, itr->wysokosc, itr->obrazenia, itr->ochrona, itr->tekstura, itr->tekstura_r, true, itr->rodzaj);
+							tp = new Przedmiot;
+							*tp = elo;
+							przedmioty.push_back(tp);
+						}
+						if (itr->rodzaj_kalsy() == "Zbroja") {
+							cout << "elo" << endl;
+							Zbroja elo(itr->tekstura, itr->tekstura_r, itr->nazwa);
+							elo.posX = (*i)->kafelki[b]->posX;
+							elo.posY = (*i)->kafelki[b]->posY;
+							tp = new Zbroja;
+							*tp = elo;
+							przedmioty.push_back(tp);
+						}
+						if (itr->rodzaj_kalsy() == "Miecz") {
+							cout << "elo" << endl;
+							Miecz elo(itr->tekstura, itr->tekstura_r, itr->nazwa);
+							elo.posX = (*i)->kafelki[b]->posX;
+							elo.posY = (*i)->kafelki[b]->posY;
+							tp = new Miecz;
+							*tp = elo;
+							przedmioty.push_back(tp);
+						}
+
+						dodalo = true;
+					}
+
+				} while (dodalo == false);
 				
-				Przedmiot *itr= szablon_przedmiotow[int((rand() % szablon_przedmiotow.size()))];
-				cout << itr->rodzaj_kalsy() << endl;
-				if (itr->rodzaj_kalsy() == 'O') {
-					cout << "elo" << endl;
-					Potion elo(itr->nazwa, (*i)->kafelki[int((*i)->kafelki.size()/2)]->posX, (*i)->kafelki[int((*i)->kafelki.size() / 2)]->posY, itr->szerokosc, itr->wysokosc, itr->tekstura, true, itr->rodzaj, 1, itr->obrazenia);
-					tp = new Potion;
-					*tp = elo;
-					przedmioty.push_back(tp);
-				}
-				if (itr->rodzaj_kalsy() == 'I') {
-					cout << "elo" << endl;
-					Przedmiot elo(itr->nazwa, (*i)->kafelki[int((*i)->kafelki.size() / 2)]->posX, (*i)->kafelki[int((*i)->kafelki.size() / 2)]->posY, itr->szerokosc, itr->wysokosc, itr->obrazenia, itr->ochrona,itr->tekstura,itr->tekstura_r, true, itr->rodzaj);
-					tp = new Potion;
-					*tp = elo;
-					przedmioty.push_back(tp);
-				}
 			}
+			dodalo = false;
 		}
 		cout<<przedmioty.size()<<endl;
+	}
+
+	void resp_przeciwnikow(vector<Przeciwnik*> szablon_przedmiotow, vector<Przeciwnik*> &przedmioty)
+	{
+		for (auto i = pokoje.begin(); i != pokoje.end(); i++) {
+			bool dodalo = false;
+			if (rand() % 10 >3)
+			{
+				do
+				{
+					int b = rand() % (*i)->kafelki.size();
+					if ((*i)->kafelki[b]->chodzonosc == true)
+					{
+						Przeciwnik* tp;
+
+						Przeciwnik *itr = szablon_przedmiotow[int((rand() % szablon_przedmiotow.size()))];
+						cout << itr->rodzaj() << endl;
+						if (itr->rodzaj() == "Szczur") {
+							cout << "elo" << endl;
+							Szczur elo(itr->tekstura);
+							elo.posX = (*i)->kafelki[b]->posX;
+							elo.posY= (*i)->kafelki[b]->posY;
+						
+							tp = new Szczur;
+							*tp = elo;
+							przedmioty.push_back(tp);
+						}
+						if (itr->rodzaj() == "Ogien") {
+							cout << "elo" << endl;
+							Ogien elo(itr->tekstura);
+							elo.posX = (*i)->kafelki[b]->posX;
+							elo.posY = (*i)->kafelki[b]->posY;
+							tp = new Ogien;
+							*tp = elo;
+							przedmioty.push_back(tp);
+						}
+
+						dodalo = true;
+					}
+
+				} while (dodalo == false);
+
+			}
+			dodalo = false;
+		}
+		cout << przedmioty.size() << endl;
 	}
 
 	void dodanie_zejscia(SDL_Texture *tekstura, SDL_Texture *g_schody,Gracz gracz)
 	{
 		int a = rand() % pokoje.size();
-		
-		do
-		{
+		bool gowno = false;
+		do{
+			cout << gowno << endl;
 			int b = rand() % pokoje[a]->kafelki.size();
 			if (pokoje[a]->kafelki[b]->chodzonosc == true)
 			{
-				cout << pokoje[a]->kafelki.size() << endl;
+				
 				Klocek* tp;
 				tp = new Zejscie;
 				Zejscie elo(pokoje[a]->kafelki[b]->posX, pokoje[a]->kafelki[b]->posY, tekstura);
 				elo.chodzonosc = true;
+				
 				*tp = elo;
 				pokoje[a]->kafelki.erase(pokoje[a]->kafelki.begin()+b);
 				pokoje[a]->kafelki.push_back(tp);
 
-				cout << pokoje[a]->kafelki.size() << endl;
+				
 				zejscie = true;
+				gowno = true;
 			}
 			
-		} while (zejscie == false);
+		} while (gowno == false);
 		Klocek* tp;
 		tp = new Klocek;
 		Klocek elo(gracz.posX, gracz.posY, g_schody);
@@ -754,9 +1050,5 @@ public:
 
 
 
-//Funkcje:
 
-vector<SDL_Rect> ustawianie_rect_spraj(int wys, int szer, int kolumny);
-int taimer_animacji(int &_t, int &_s,int liczba_klatek, int odswierzanie);
-int taimer(Uint32 czas, int liczba_klatek, Uint32 odswierzanie);
-string zmiana_nazwy(int nr_podziemia);
+
