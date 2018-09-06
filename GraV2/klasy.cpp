@@ -9,6 +9,7 @@
 #include<time.h>
 #include"klasy.h"
 #include<string>
+#include<mysql.h>
 
 using namespace std;
 
@@ -81,6 +82,10 @@ string zmiana_nazwy(int nr_podziemia)
 	return a;
 }
 
+void funkcja()
+{
+
+}
 
 
 //Przeciwnik:

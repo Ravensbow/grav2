@@ -11,6 +11,7 @@
 #include<string>
 #include<cmath>
 #include"klasy.h"
+#include<mysql.h>
 
 
 using namespace std;
@@ -105,7 +106,8 @@ string gen_nazw(char rodzaj)
 #pragma endregion
 
 #pragma region Zmienne globalne
-int scena = 1;
+int idgracza = 0;
+int scena = -1;
 int klatka = 0;
 int klatka2 = 0;
 bool zmiana_levelu = true;
@@ -134,16 +136,20 @@ int mysz_y = 500;
 #pragma endregion  
 
 
+
 int main(int argc, char * args[])
 {
-	
+	MYSQL mysql;
+	mysql_init(&mysql);
 	
 	#pragma region Inicjalizacja i drfinicja okna i rendera
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 	SDL_Init(SDL_INIT_EVERYTHING | SDL_INIT_AUDIO);
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 	TTF_Init();
-	
+
+
+
 	SDL_Surface* icon;
 	icon = SDL_LoadBMP("Grafiki/g_icon.bmp");
 	window = SDL_CreateWindow("KWCpP", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_SHOWN);
@@ -162,10 +168,10 @@ int main(int argc, char * args[])
 	//Pêtla wykonawcza gry:
 	while (true)
 	{
-		
-		if (scena == 0) 
+
+		if (scena == 0)
 		{
-		#pragma region Tekstury
+			#pragma region Tekstury
 			SDL_Texture *g_sztylet = loadTexture("Grafiki/g_sztylet.png");
 			SDL_Texture *g_sztylet_r = loadTexture("Grafiki/g_sztylet_r.png");
 			SDL_Texture *g_katana = loadTexture("Grafiki/g_katana.png");
@@ -215,11 +221,11 @@ int main(int argc, char * args[])
 			SDL_Texture *g_schody = loadTexture("Grafiki/g_schody.png");
 			SDL_Texture *g_szczur = loadTexture("Grafiki/g_mysz.png");
 			SDL_Texture *g_ogien = loadTexture("Grafiki/g_ogien.png");
-		//Czcionki:
+			//Czcionki:
 			TTF_Font*arial = TTF_OpenFont("sredniowiecze.ttf", 30);
 			#pragma endregion
 
-		#pragma region Dzwieki
+			#pragma region Dzwieki
 			Mix_Chunk *m_ciecie = Mix_LoadWAV("Dzwieki/m_ciecie.wav");
 			Mix_Chunk *m_chodzenie = Mix_LoadWAV("Dzwieki/m_chodzenie2.wav");
 			Mix_Chunk *m_obrazenia = Mix_LoadWAV("Dzwieki/m_obrazenia.wav");
@@ -227,9 +233,9 @@ int main(int argc, char * args[])
 			Mix_Chunk *m_przegrales = Mix_LoadWAV("Dzwieki/m_przegrales.wav");
 			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka2.wav");
 
-		#pragma endregion
+			#pragma endregion
 
-		#pragma region Zmienne
+			#pragma region Zmienne
 			///wektory
 			vector<Przedmiot*> v_przedmioty;
 			vector<Przedmiot*> przedmiksy;
@@ -238,26 +244,26 @@ int main(int argc, char * args[])
 			///obiekty
 
 			UI ui(0, 0, 720, 1280, g_UI, g_kulazycia, g_znacznik_podpalenia);
-			
+
 			Map testowa_mapa;
 			Map mgla_wojny;
 
-			Gracz gracz(100, 300, 100, 100, true, g_gracz,g_gracz_chodzenie);
-			Przeciwnik gnom1("Gnom", 400, 500, 100,100,10,10,0,2,g_szkielet,ustawianie_rect_spraj(64,40,4));
-			Przeciwnik gnom2("Gnom inny", 500, 700, 100, 100, 10, 10, 0,2, g_szkielet, ustawianie_rect_spraj(64, 40, 4));
+			Gracz gracz(100, 300, 100, 100, true, g_gracz, g_gracz_chodzenie);
+			Przeciwnik gnom1("Gnom", 400, 500, 100, 100, 10, 10, 0, 2, g_szkielet, ustawianie_rect_spraj(64, 40, 4));
+			Przeciwnik gnom2("Gnom inny", 500, 700, 100, 100, 10, 10, 0, 2, g_szkielet, ustawianie_rect_spraj(64, 40, 4));
 
-			Szczur szczur(g_szczur,100,100,100);
-			Ogien ogien(g_ogien,100,100,100);
-			
-			Przedmiot miecz3("Tarcza Ateny", 600, 200, 100, 100,0,1, g_tarcza,g_tarcza,true,'t');
+			Szczur szczur(g_szczur, 100, 100, 100);
+			Ogien ogien(g_ogien, 100, 100, 100);
+
+			Przedmiot miecz3("Tarcza Ateny", 600, 200, 100, 100, 0, 1, g_tarcza, g_tarcza, true, 't');
 			Przedmiot a;
 
-			Potion aaa("Potion Sily", 100, 100, 100, 100, g_potion_zdrowia, true, 's',0,0);
-			Potion zdrowko("Potion Zdrowia", 100, 200, 100, 100, g_potion_zdrowia, true, 'u',0,0);
+			Potion aaa("Potion Sily", 100, 100, 100, 100, g_potion_zdrowia, true, 's', 0, 0);
+			Potion zdrowko("Potion Zdrowia", 100, 200, 100, 100, g_potion_zdrowia, true, 'u', 0, 0);
 			Potion dos("Potion Doswiadczenia", 100, 200, 100, 100, g_potion_zdrowia, true, '1', 0, 0);
 			Potion szczala("Rzutka", 200, 200, 100, 100, g_zutka, true, 'q', 5, 3);
-			
-			Okno_eq eq(60, 10, 700, 600, false,g_statystyki);
+
+			Okno_eq eq(60, 10, 700, 600, false, g_statystyki);
 
 			Miecz katana(g_katana, g_katana_r, "Katana");
 			Miecz sztylet(g_sztylet, g_sztylet_r, "Maly Sztylet");
@@ -268,7 +274,7 @@ int main(int argc, char * args[])
 			Zbroja szata(g_szata, g_szata_r, "Szata Maga");
 			Zbroja plytowa(g_zbroja, g_zbroja_r, "Zbroja Plytowa");
 			Zbroja hwang(g_hwang, g_hwang_r, "Hwang");
-			
+
 			Przeciwnik* tpp;
 
 			tpp = new Szczur;
@@ -277,11 +283,11 @@ int main(int argc, char * args[])
 			tpp = new Ogien;
 			*tpp = ogien;
 			v_przeciwniki.push_back(tpp);
-			
+
 			Przedmiot* tp;
-	
+
 			tp = new Miecz;
-			*tp =katana;
+			*tp = katana;
 			v_przedmioty.push_back(tp);
 			tp = new Miecz;
 			*tp = sztylet;
@@ -320,21 +326,21 @@ int main(int argc, char * args[])
 			*tp = szczala;
 			v_przedmioty.push_back(tp);
 
-			testowa_mapa.ukladanie_pokoi(g_pod_kanaly, g_pod_kanaly2, g_pod_kanaly3, g_pod_kanaly4, g_sciana,mgla_wojny);
-			testowa_mapa.dodanie_zejscia(g_zejscie,g_schody,gracz);
+			testowa_mapa.ukladanie_pokoi(g_pod_kanaly, g_pod_kanaly2, g_pod_kanaly3, g_pod_kanaly4, g_sciana, mgla_wojny);
+			testowa_mapa.dodanie_zejscia(g_zejscie, g_schody, gracz);
 			testowa_mapa.resp_item(v_przedmioty, przedmiksy);
 			testowa_mapa.resp_przeciwnikow(v_przeciwniki, przeciwniksy);
 
 			mgla_wojny.czarna_mapa(tlo);
 			#pragma endregion
 
-		
 
-			while (scena == 0) 
+
+			while (scena == 0)
 			{
 				fps.start();
-			//ZDARZENIA:
-			//Generowanie mapy:
+				//ZDARZENIA:
+				//Generowanie mapy:
 				if (zmiana_levelu == true)
 				{
 					gracz.posX = 100;
@@ -351,15 +357,15 @@ int main(int argc, char * args[])
 					testowa_mapa.resp_item(v_przedmioty, przedmiksy);
 					mgla_wojny.czarna_mapa(tlo);
 
-					
+
 
 					nr_pietra++;
 
-					
+
 					if (nr_pietra == 6)
 					{
 						scena = 1;
-						SDL_Texture*napisek = napis(255, 255, 0, arial, render,"WYGRALES");
+						SDL_Texture*napisek = napis(255, 255, 0, arial, render, "WYGRALES");
 						SDL_Rect rect;
 						rect.x = 0;
 						rect.y = 0;
@@ -382,205 +388,211 @@ int main(int argc, char * args[])
 					Mix_PlayMusic(m_muzyka1, -1);
 				}
 				///1.Przycisk X
-					while (SDL_PollEvent(&zdarzenie))
+				while (SDL_PollEvent(&zdarzenie))
+				{
+					if (zdarzenie.type == SDL_QUIT) return 0;
+					if (zdarzenie.type == SDL_MOUSEMOTION)
 					{
-						if (zdarzenie.type == SDL_QUIT) return 0;
-						if (zdarzenie.type == SDL_MOUSEMOTION)
-						{
-							mysz_x = zdarzenie.button.x;
-							mysz_y = zdarzenie.button.y;
-							
-						}
-					
-						
+						mysz_x = zdarzenie.button.x;
+						mysz_y = zdarzenie.button.y;
+
 					}
+
+
+				}
+
 				///2.Przesuwanie Kamery:
-					if (mysz_x < 30&&mysz_x!=0) {
-						if(abs(przesuniecieX<8))przesuniecieX += 1;
-					}
 
-					else if (mysz_x > 1250 && mysz_x != 1280) {
-						if (abs(przesuniecieX)<8)przesuniecieX -= 1;
-					}
+				#pragma region KAMERA
+				if (mysz_x > 1250 && mysz_x < 30) przesuniecieX = 0;
+				if (mysz_y > 30 && mysz_y < 690) przesuniecieY = 0;
+				skala = 1;
 
-					else if (mysz_y > 690 && mysz_y != 720) {
-						if (abs(przesuniecieY)<8)przesuniecieY-= 1;
-					}
-					
-					else if (mysz_y < 30 && mysz_y != 0) {
-						if (abs(przesuniecieY)<8)przesuniecieY += 1;
-					}
-					else {
-						przesuniecieX = 0;
-						przesuniecieY = 0;
-					}
-					if ( mysz_x > 1250 && mysz_x < 30) przesuniecieX = 0;
-					if ( mysz_y > 30 && mysz_y < 690) przesuniecieY = 0;
-			
-			//STEROWANIE:
-				///1.Skalowanie
-					
-					skala = 1;
-					if (GetAsyncKeyState(0x5A)) // scroll dow
-					{
-						if(skala>0.5)skala = 0.5;
-						SDL_Delay(200);
-					}
-					else if (GetAsyncKeyState(0x58)) // scroll up
-					{
-						if(skala<2)skala = 2;
-						SDL_Delay(200);
-					}
+				if (mysz_x < 30 && mysz_x != 0) {
+					if (abs(przesuniecieX < 8))przesuniecieX += 1;
+				}
 
-					testowa_mapa.skalowanie(przesuniecieX, przesuniecieY, skala);
-					mgla_wojny.skalowanie(przesuniecieX, przesuniecieY, skala);
-					
-					gracz.skalowanie(przesuniecieX, przesuniecieY, skala);
+				else if (mysz_x > 1250 && mysz_x != 1280) {
+					if (abs(przesuniecieX) < 8)przesuniecieX -= 1;
+				}
+
+				else if (mysz_y > 690 && mysz_y != 720) {
+					if (abs(przesuniecieY) < 8)przesuniecieY -= 1;
+				}
+
+				else if (mysz_y < 30 && mysz_y != 0) {
+					if (abs(przesuniecieY) < 8)przesuniecieY += 1;
+				}
+
+
+
+				//STEROWANIE:
+					///1.Skalowanie
+
+
+				else if (GetAsyncKeyState(0x5A)) // scroll dow
+				{
+					if (skala > 0.5)skala = 0.5;
+					SDL_Delay(200);
+				}
+				else if (GetAsyncKeyState(0x58)) // scroll up
+				{
+					if (skala < 2)skala = 2;
+					SDL_Delay(200);
+				}
+				///Gracz przy krawedzi, przesuwanie kamery:
+				else if (gracz.posX > 1280 - gracz.szerokosc * 2)
+				{
+					testowa_mapa.skalowanie(-400, 0, 1);
+					mgla_wojny.skalowanie(-400, 0, 1);
+
+					gracz.skalowanie(-400, 0, 1);
 					for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
-						(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
+						(*itr)->skalowanie(-400, 0, skala);
 					}
 					for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
-						(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
+						(*itr)->skalowanie(-400, 0, skala);
 					}
+				}
 
-				///Gracz przy krawedzi, przesuwanie kamery:
-					if (gracz.posX >1280 -gracz.szerokosc * 2)
-					{
-						testowa_mapa.skalowanie(-400,0, 1);
-						mgla_wojny.skalowanie(-400, 0, 1);
+				else if (gracz.posX < gracz.szerokosc * 2)
+				{
+					cout << gracz.posX << endl;
+					testowa_mapa.skalowanie(400, 0, 1);
+					mgla_wojny.skalowanie(400, 0, 1);
 
-						gracz.skalowanie(-400, 0,1);
-						for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
-							(*itr)->skalowanie(-400, 0, skala);
-						}
-						for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
-							(*itr)->skalowanie(-400,0, skala);
-						}
+					gracz.skalowanie(400, 0, 1);
+					for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+						(*itr)->skalowanie(400, 0, skala);
 					}
-					
-					if (gracz.posX < gracz.szerokosc*2)
-					{
-						cout << gracz.posX << endl;
-						testowa_mapa.skalowanie(400, 0, 1);
-						mgla_wojny.skalowanie(400, 0, 1);
-
-						gracz.skalowanie(400, 0, 1);
-						for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
-							(*itr)->skalowanie(400, 0, skala);
-						}
-						for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
-							(*itr)->skalowanie(400, 0, skala);
-						}
+					for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
+						(*itr)->skalowanie(400, 0, skala);
 					}
-					if (gracz.posY >720 - gracz.szerokosc * 2)
-					{
-						testowa_mapa.skalowanie(0, -200, 1);
-						mgla_wojny.skalowanie(0, -200, 1);
+				}
+				else if (gracz.posY > 720 - gracz.szerokosc * 2)
+				{
+					testowa_mapa.skalowanie(0, -200, 1);
+					mgla_wojny.skalowanie(0, -200, 1);
 
-						gracz.skalowanie(0, -200, 1);
-						for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
-							(*itr)->skalowanie(0, -200, skala);
-						}
-						for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
-							(*itr)->skalowanie(0, -200, skala);
-						}
+					gracz.skalowanie(0, -200, 1);
+					for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+						(*itr)->skalowanie(0, -200, skala);
 					}
-					if (gracz.posY < gracz.szerokosc * 2)
-					{
-						cout << "elo" << endl;
-						testowa_mapa.skalowanie(0, 200, 1);
-						mgla_wojny.skalowanie(0, 200, 1);
-
-						gracz.skalowanie(0, 200, 1);
-						for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
-							(*itr)->skalowanie(0, 200, skala);
-						}
-						for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
-							(*itr)->skalowanie(0, 200, skala);
-						}
+					for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
+						(*itr)->skalowanie(0, -200, skala);
 					}
+				}
+				else if (gracz.posY < gracz.szerokosc * 2)
+				{
+					cout << "elo" << endl;
+					testowa_mapa.skalowanie(0, 200, 1);
+					mgla_wojny.skalowanie(0, 200, 1);
 
+					gracz.skalowanie(0, 200, 1);
+					for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+						(*itr)->skalowanie(0, 200, skala);
+					}
+					for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
+						(*itr)->skalowanie(0, 200, skala);
+					}
+				}
+				else {
+					przesuniecieX = 0;
+					przesuniecieY = 0;
+				}
+
+				testowa_mapa.skalowanie(przesuniecieX, przesuniecieY, skala);
+				mgla_wojny.skalowanie(przesuniecieX, przesuniecieY, skala);
+
+				gracz.skalowanie(przesuniecieX, przesuniecieY, skala);
+				for (auto itr = przedmiksy.begin(); itr != przedmiksy.end(); itr++) {
+					(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
+				}
+				for (auto itr = przeciwniksy.begin(); itr != przeciwniksy.end(); itr++) {
+					(*itr)->skalowanie(przesuniecieX, przesuniecieY, skala);
+				}
+				#pragma endregion
 
 				///3.Podnoszeni przedmiotow przez gracza:
-					gracz.usuwanie_mgly(mgla_wojny,g_mgla);
-					
+				gracz.usuwanie_mgly(mgla_wojny, g_mgla);
 
-					gracz.pauza(przeciwniksy);
-					
-					gracz.efekty_pasywne();
+
+				gracz.pauza(przeciwniksy);
+
+				gracz.efekty_pasywne();
 
 				///Gracz:
-					gracz.poruszanie(eq, przeciwniksy,m_chodzenie,testowa_mapa);
-					gracz.efekty_pasywne();
+				gracz.poruszanie(eq, przeciwniksy, m_chodzenie, testowa_mapa);
+				gracz.efekty_pasywne();
 				///1.1 Gracz atak:6
-					gracz.atak_przycisk();
-					
+				gracz.atak_przycisk();
+
 				///2.UI
-					eq.sterowanie(gracz);
-					
-			//RENDERE:
+				eq.sterowanie(gracz);
+
+				//RENDERE:
 				SDL_RenderClear(render);
-				
+
 				///1. Tlo:
-				
-					testowa_mapa.update(render,gracz,zmiana_levelu);
+
+				testowa_mapa.update(render, gracz, zmiana_levelu);
 
 				///2. Gracz:
-					gracz.update(render,s_postac,t_postac,g_zdrowie,arial,g_obrazenia);
+				gracz.update(render, s_postac, t_postac, g_zdrowie, arial, g_obrazenia);
 
 				///3. Przeciwniki:\
 
-					for (int i = 0; i < przeciwniksy.size(); i++)
-					{
-						przeciwniksy[i]->poruszanie(render, gracz, s_szkielet, t_szkielet,g_zdrowie,testowa_mapa);
-					}
-					for (int i = 0; i < przeciwniksy.size(); i++)
-					{
-						przeciwniksy[i]->update(render,s_szkielet, t_szkielet, g_zdrowie,g_ciecie,arial);
-						
-					}
-					eq.zucanie(gracz, przeciwniksy, render,przedmiksy,testowa_mapa);
+				for (int i = 0; i < przeciwniksy.size(); i++)
+				{
+					przeciwniksy[i]->poruszanie(render, gracz, s_szkielet, t_szkielet, g_zdrowie, testowa_mapa);
+				}
+				for (int i = 0; i < przeciwniksy.size(); i++)
+				{
+					przeciwniksy[i]->update(render, s_szkielet, t_szkielet, g_zdrowie, g_ciecie, arial);
+
+				}
+				eq.zucanie(gracz, przeciwniksy, render, przedmiksy, testowa_mapa);
 				///4. Przedmiot:
-					for (auto i = przedmiksy.begin(); i != przedmiksy.end(); i++)
-					{
-						
-						(*i)->update(render);
-					}
+				for (auto i = przedmiksy.begin(); i != przedmiksy.end(); i++)
+				{
+
+					(*i)->update(render);
+				}
 
 
 				///.6 Ataki
-					
-					gracz.atak(przeciwniksy, g_znacznik2, g_ciecie,render,m_ciecie);
-					gracz.efekty_pasywne();
-					//gnom1.atak(gracz);
-					for (int i = 0; i < przeciwniksy.size(); i++)
-					{
-						przeciwniksy[i]->atak(gracz,m_obrazenia);
-					}
+
+				gracz.atak(przeciwniksy, g_znacznik2, g_ciecie, render, m_ciecie);
+				gracz.efekty_pasywne();
+
+				for (int i = 0; i < przeciwniksy.size(); i++)
+				{
+					przeciwniksy[i]->atak(gracz, m_obrazenia);
+				}
 				///7. Mgla wojny:
-					//mgla_wojny.update(render,gracz,zmiana_levelu);
+				mgla_wojny.update(render, gracz, zmiana_levelu);
 				///0. UI:
-					ui.update(gracz, render,arial,nr_pietra,nazwa_pietra);
-					gracz.podnoszenie(przedmiksy, render, g_okno_przedmiotu, arial);
+				ui.update(gracz, render, arial, nr_pietra, nazwa_pietra);
+				gracz.podnoszenie(przedmiksy, render, g_okno_przedmiotu, arial);
 				///5. Okno ekwipunku:
-					eq.update(g_okno_ekwipunku, g_znacznik, g_okno_przedmiotu, arial, render, gracz);
-					
-					if (gracz.zycie <= 0)
-					{
-						scena = 1;
-						SDL_Texture*napisek = napis(255, 255, 0, arial, render, "PRZEGRALES");
-						SDL_Rect rect;
-						rect.x = 0;
-						rect.y = 0;
-						rect.w = 1280;
-						rect.h = 720;
-						SDL_RenderCopy(render, napisek, NULL, &rect);
-						SDL_RenderPresent(render);
-						Mix_PlayChannel(-1, m_przegrales, 0);
-						SDL_Delay(5000);
-						SDL_DestroyTexture(napisek);
-					}
-					testowa_mapa.dodanie_przeciwnika(przeciwniksy,g_szczur,g_ogien);
+				eq.update(g_okno_ekwipunku, g_znacznik, g_okno_przedmiotu, arial, render, gracz);
+
+				if (gracz.zycie <= 0)
+				{
+					scena = 1;
+					SDL_Texture*napisek = napis(255, 255, 0, arial, render, "PRZEGRALES");
+					SDL_Rect rect;
+					rect.x = 0;
+					rect.y = 0;
+					rect.w = 1280;
+					rect.h = 720;
+					SDL_RenderCopy(render, napisek, NULL, &rect);
+					SDL_RenderPresent(render);
+					Mix_PlayChannel(-1, m_przegrales, 0);
+					SDL_Delay(5000);
+					SDL_DestroyTexture(napisek);
+				}
+				testowa_mapa.dodanie_przeciwnika(przeciwniksy, g_szczur, g_ogien);
 
 				//Odswiertzanie i czyszczenie:
 				klatka++;
@@ -589,7 +601,7 @@ int main(int argc, char * args[])
 				gracz.koniec(przeciwniksy);
 			}
 
-			#pragma region Niszczenie Tekstur Muzyki i Napisow
+#pragma region Niszczenie Tekstur Muzyki i Napisow
 			SDL_DestroyTexture(g_gracz);
 			SDL_DestroyTexture(g_gracz_chodzenie);
 			SDL_DestroyTexture(g_szkielet);
@@ -621,7 +633,7 @@ int main(int argc, char * args[])
 			SDL_DestroyTexture(g_ogien);
 			SDL_DestroyTexture(g_zejscie);
 			SDL_DestroyTexture(g_schody);
-			
+
 			SDL_DestroyTexture(g_sztylet);
 			SDL_DestroyTexture(g_sztylet_r);
 			SDL_DestroyTexture(g_katana);
@@ -641,7 +653,7 @@ int main(int argc, char * args[])
 			Mix_FreeChunk(m_chodzenie);
 			Mix_FreeChunk(m_obrazenia);
 
-			#pragma endregion
+#pragma endregion
 
 		}
 
@@ -651,20 +663,20 @@ int main(int argc, char * args[])
 			SDL_Texture *g_menu = loadTexture("Grafiki/g_menu.png");
 			SDL_Texture *g_napis_menu = loadTexture("Grafiki/g_napis_menu.png");
 			SDL_Texture *g_znacznik_menu = loadTexture("Grafiki/g_znacznik_menu.png");
-	
+
 			//Czcionki:
 			TTF_Font*arial = TTF_OpenFont("sredniowiecze.ttf", 30);
 		#pragma endregion
 
 		#pragma region Dzwieki
-			
-			
+
+
 			Mix_Music *m_muzyka1 = Mix_LoadMUS("Dzwieki/m_muzyka2.wav");
 		#pragma endregion
 
 			int znacznikX = 460;
 			int znacznikY = 300;
-			
+
 
 			///0. Muzyka:
 			if (Mix_PlayingMusic() == 0)
@@ -698,9 +710,9 @@ int main(int argc, char * args[])
 				rect.y = 10;
 				rect.w = 500;
 				rect.h = 350;
-				SDL_RenderCopy(render, g_napis_menu, &ustawianie_rect_spraj(200,300,2)[taimer_animacji(s_nazwa,t_nazwa,2,400)], &rect);
+				SDL_RenderCopy(render, g_napis_menu, &ustawianie_rect_spraj(200, 300, 2)[taimer_animacji(s_nazwa, t_nazwa, 2, 400)], &rect);
 
-				if (GetAsyncKeyState(VK_UP)&&znacznikY-100>=300)
+				if (GetAsyncKeyState(VK_UP) && znacznikY - 100 >= 300)
 				{
 					znacznikY -= 100;
 					SDL_Delay(200);
@@ -737,6 +749,117 @@ int main(int argc, char * args[])
 			}
 
 		}
-	}
 
+		if (scena == -1)
+		{
+			string login;
+			string haslo;
+			bool zalogowano = false;
+			if (mysql_real_connect(&mysql, "127.0.0.1", "root", "", "grav2", 0, NULL, 0))
+				printf("Po³¹czenie z baz¹ danych MySQL nawi¹zano poprawnie!\n");
+			else
+				printf("B³¹d po³¹czenia z baz¹ MySQL: %d, %s\n", mysql_errno(&mysql), mysql_error(&mysql));
+
+			mysql_select_db(&mysql, "grav2");
+
+			int a;
+			string qwe;
+			const char * c;
+			MYSQL_RES * idZapytania;
+			MYSQL_ROW	wiersz;
+
+			SDL_Texture* g_menu = loadTexture("Grafiki/g_logowanie.png");
+			SDL_Texture* g_przycisk = loadTexture("Grafiki/g_czern.png");
+			SDL_Texture* g_znacznik_menu= loadTexture("Grafiki/g_znacznik_menu.png");
+			TTF_Font*arial = TTF_OpenFont("sredniowiecze.ttf", 30);
+			Przycisk przycisk1(100, 100, 200, 50, g_przycisk,"Zaloguj");
+			Przycisk przycisk2(500, 100, 200, 50, g_przycisk, "Zarejestruj");
+			Textbox textbox(500, 500, 400, 100, g_znacznik_menu);
+			Textbox textbox2(500, 300, 400, 100, g_znacznik_menu);
+			while (scena == -1)
+			{
+				while (SDL_PollEvent(&zdarzenie))
+				{
+					if (zdarzenie.type == SDL_QUIT) return 0;
+					if (zdarzenie.type == SDL_MOUSEMOTION)
+					{
+						mysz_x = zdarzenie.button.x;
+						mysz_y = zdarzenie.button.y;
+
+					}
+
+
+				}
+				SDL_RenderClear(render);
+				SDL_Rect rect;
+				rect.x = 0;
+				rect.y = 0;
+				rect.w = 1280;
+				rect.h = 720;
+				SDL_RenderCopy(render, g_menu, NULL, &rect);
+				przycisk1.update(render, arial);
+				przycisk2.update(render, arial);
+				przycisk1.clicked(mysz_x, mysz_y, funkcja);
+				textbox.update(render, arial, mysz_x, mysz_y);
+				textbox2.update(render, arial, mysz_x, mysz_y);
+				login = textbox2.tekst;
+				haslo = textbox.tekst;
+				przycisk1.click(mysz_x, mysz_y);
+				przycisk2.click(mysz_x, mysz_y);
+				if (przycisk1.kliknelo == true)
+				{
+			 		qwe = "SELECT haslo, idgracz FROM gracz WHERE login= \"" + login + "\"";
+
+					c = qwe.c_str();
+					mysql_query(&mysql, c);
+					idZapytania = mysql_store_result(&mysql);
+ 					wiersz = mysql_fetch_row(idZapytania);
+					cout << mysql_num_fields(idZapytania) << endl;
+					if (wiersz == nullptr) {
+						cout << "Podana nazwa uzytkownika bledna!" << endl;
+						
+					}
+					else if (haslo == wiersz[0])
+					{
+						cout << "Zalogowano!" << endl;
+						cout <<"id: "<< wiersz[1] << endl;;
+						idgracza = (int)wiersz[1];
+						scena = 1;
+
+					}
+					else
+					{
+						cout << wiersz[0] << endl;
+						cout << "Bledne haslo!" << endl;
+					}
+				}
+				if (przycisk2.kliknelo == true)
+				{
+					qwe = "SELECT haslo FROM gracz WHERE login= \"" + login + "\"";
+					c = qwe.c_str();
+					mysql_query(&mysql, c);
+					idZapytania = mysql_store_result(&mysql);
+					wiersz = mysql_fetch_row(idZapytania);
+					if (wiersz != nullptr) {
+						cout << "Podana nazwa uzytkownika zajeta!" << endl;
+						break;
+					}
+					else
+					{
+						qwe = "INSERT INTO gracz VALUES(NULL,\"" + login + "\",\"" + haslo + "\")";
+						c = qwe.c_str();
+						mysql_query(&mysql, c);
+						cout << "Zajerestrowano" << endl;
+					}
+
+
+				}
+				przycisk1.kliknelo = false;
+				przycisk2.kliknelo = false;
+				klatka++;
+				SDL_RenderPresent(render);
+			}
+		}
+
+	}
 }

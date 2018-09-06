@@ -70,8 +70,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\SDL\SDL2_ttf-2.0.14\include;C:\SDL\SDL2_mixer-2.0.2\include;C:\SDL\SDL2_image-2.0.2\include;C:\SDL\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\SDL\SDL2_ttf-2.0.14\lib\x86;C:\SDL\SDL2_mixer-2.0.2\lib\x86;C:\SDL\SDL2_image-2.0.2\lib\x86;C:\SDL\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files %28x86%29\MySQL\MySQL Connector C 6.1\include;C:\SDL\SDL2_ttf-2.0.14\include;C:\SDL\SDL2_mixer-2.0.2\include;C:\SDL\SDL2_image-2.0.2\include;C:\SDL\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\MySQL\MySQL Connector C 6.1\lib;C:\SDL\SDL2_ttf-2.0.14\lib\x86;C:\SDL\SDL2_mixer-2.0.2\lib\x86;C:\SDL\SDL2_image-2.0.2\lib\x86;C:\SDL\lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>C:\SDL\SDL2_ttf-2.0.14\include;C:\SDL\SDL2_mixer-2.0.2\include;C:\SDL\SDL2_image-2.0.2\include;C:\SDL\include;$(IncludePath)</IncludePath>
@@ -94,8 +94,8 @@
       <AdditionalIncludeDirectories>C:\SDL\SDL2_ttf-2.0.14\include;C:\SDL\SDL2_mixer-2.0.2\include;C:\SDL\SDL2_image-2.0.2\include;C:\SDL\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>C:\SDL\SDL2_ttf-2.0.14\lib\x86;C:\SDL\SDL2_mixer-2.0.2\lib\x86;C:\SDL\SDL2_image-2.0.2\lib\x86;C:\SDL\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_mixer.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Program Files %28x86%29\MySQL\MySQL Connector C 6.1\lib;C:\SDL\SDL2_ttf-2.0.14\lib\x86;C:\SDL\SDL2_mixer-2.0.2\lib\x86;C:\SDL\SDL2_image-2.0.2\lib\x86;C:\SDL\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_mixer.lib;libmysql.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
     </Link>
   </ItemDefinitionGroup>

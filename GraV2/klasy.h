@@ -8,6 +8,7 @@
 #include<sstream>
 #include<typeinfo>
 #include<time.h>
+#include<functional>
 
 
 
@@ -28,6 +29,7 @@ int taimer_animacji(int &_t, int &_s, int liczba_klatek, int odswierzanie);
 int taimer(Uint32 czas, int liczba_klatek, Uint32 odswierzanie);
 string zmiana_nazwy(int nr_podziemia);
 SDL_Texture* napis(int c1, int c2, int c3, TTF_Font*arial, SDL_Renderer* render, string napis);
+void funkcja();
 
 
 class Gracz
@@ -1111,6 +1113,146 @@ public:
 	void clear()
 	{
 		pokoje.clear();
+	}
+};
+
+class Przycisk
+{
+public:
+	double posX;
+	double posY;
+	double wys;
+	double szer;
+	string nap;
+	SDL_Texture* tekstura;
+	typedef void(*funkcja)();
+	bool kliknelo = false;
+
+	Przycisk(double  px, double py, double s, double w, SDL_Texture *tex,string napiso)
+	{
+		posX = px;
+		posY = py;
+		szer = s;
+		wys = w;
+		tekstura = tex;
+		nap = napiso;
+	}
+
+	void update(SDL_Renderer* render,TTF_Font* arial)
+	{
+		SDL_Rect rect;
+		rect.x = posX;
+		rect.y = posY;
+		rect.h = wys;
+		rect.w = szer;
+		SDL_RenderCopy(render, tekstura, NULL, &rect);
+		SDL_Texture* na = napis(255, 255, 255, arial, render, nap);
+		
+		rect.h = wys * 0.9;
+		rect.w =szer;
+
+		SDL_RenderCopy(render, na, NULL, &rect);
+		SDL_DestroyTexture(na);
+	}
+
+	/*void clicked(double m_px,double m_py,funkcja cosiestanie)
+	{
+		if (m_px > posX&&m_px<posX + szer && m_py>posY&&m_py < posY + wys&& GetAsyncKeyState(VK_LBUTTON))
+		{
+			cosiestanie();
+			SDL_Delay(300);
+		}
+
+	}*/
+	void clicked(double m_px, double m_py, std::function<void()> f )
+	{
+		if (m_px > posX&&m_px<posX + szer && m_py>posY&&m_py < posY + wys && GetAsyncKeyState(VK_LBUTTON))
+		{
+			f();
+			SDL_Delay(300);
+		}
+
+	}
+	void click(double m_px, double m_py)
+	{
+		if (m_px > posX&&m_px<posX + szer && m_py>posY&&m_py < posY + wys && GetAsyncKeyState(VK_LBUTTON))
+		{
+			kliknelo = true;
+			SDL_Delay(300);
+		}
+
+	}
+};
+
+class Textbox
+{
+public:
+	double posX, posY, wys, szer;
+	string tekst="";
+	bool edytowany = false;
+	SDL_Texture* tekstura;
+
+	Textbox(double x, double y, double s, double w, SDL_Texture*tex)
+	{
+		posX = x;
+		posY = y;
+		wys = w;
+		szer = s;
+		tekstura = tex;
+	}
+
+	void update(SDL_Renderer* render, TTF_Font* arial,double m_x,double m_y)
+	{
+		SDL_Rect rect;
+		rect.x = posX;
+		rect.y = posY;
+		rect.h = wys;
+		rect.w = szer;
+		SDL_RenderCopy(render, tekstura, NULL, &rect);
+		SDL_Texture* na = napis(255, 255, 0, arial, render, tekst);
+		rect.w = szer/10*tekst.size();
+		SDL_RenderCopy(render, na, NULL, &rect);
+		if (m_x > posX&&m_x<posX + szer && m_y>posY&&m_y < posY + wys && GetAsyncKeyState(VK_LBUTTON))
+		{
+			edytowany = true;
+		}
+		else if (GetAsyncKeyState(VK_LBUTTON))
+		{
+			edytowany = false;
+		}
+
+		if (edytowany == true)
+		{
+			if (GetAsyncKeyState(0x41) && szer / 10 * tekst.size() <= szer) { tekst += "a"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x42) && szer / 10 * tekst.size() <= szer) { tekst += "b"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x43) && szer / 10 * tekst.size() <= szer) { tekst += "c"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x44) && szer / 10 * tekst.size() <= szer) { tekst += "d"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x45) && szer / 10 * tekst.size() <= szer) { tekst += "e"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x46) && szer / 10 * tekst.size() <= szer) { tekst += "f"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x47) && szer / 10 * tekst.size() <= szer) { tekst += "g"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x48) && szer / 10 * tekst.size() <= szer) { tekst += "h"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x49) && szer / 10 * tekst.size() <= szer) { tekst += "i"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x4A) && szer / 10 * tekst.size() <= szer) { tekst += "j"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x4B) && szer / 10 * tekst.size() <= szer) { tekst += "k"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x4C) && szer / 10 * tekst.size() <= szer) { tekst += "l"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x4D) && szer / 10 * tekst.size() <= szer) { tekst += "m"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x4E) && szer / 10 * tekst.size() <= szer) { tekst += "n"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x4F) && szer / 10 * tekst.size() <= szer) { tekst += "o"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x50) && szer / 10 * tekst.size() <= szer) { tekst += "p"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x51) && szer / 10 * tekst.size() <= szer) { tekst += "q"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x52) && szer / 10 * tekst.size() <= szer) { tekst += "r"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x53) && szer / 10 * tekst.size() <= szer) { tekst += "s"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x54) && szer / 10 * tekst.size() <= szer) { tekst += "t"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x55) && szer / 10 * tekst.size() <= szer) { tekst += "u"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x56) && szer / 10 * tekst.size() <= szer) { tekst += "v"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x57) && szer / 10 * tekst.size() <= szer) { tekst += "w"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x58) && szer / 10 * tekst.size() <= szer) { tekst += "x"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x59) && szer / 10 * tekst.size() <= szer) { tekst += "y"; SDL_Delay(150); }
+			if (GetAsyncKeyState(0x5A) && szer / 10 * tekst.size() <= szer) { tekst += "z"; SDL_Delay(150); }
+			if (GetAsyncKeyState(VK_BACK) && tekst.size() != 0) { tekst.erase(tekst.size() - 1); SDL_Delay(150); }
+		}
+
+		SDL_DestroyTexture(na);
 	}
 };
 
