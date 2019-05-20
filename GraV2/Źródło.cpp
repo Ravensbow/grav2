@@ -107,7 +107,7 @@ string gen_nazw(char rodzaj)
 
 #pragma region Zmienne globalne
 int idgracza = 0;
-int scena = -1;
+int scena = 1;
 int klatka = 0;
 int klatka2 = 0;
 bool zmiana_levelu = true;
